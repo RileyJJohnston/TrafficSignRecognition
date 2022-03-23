@@ -20,7 +20,6 @@ import torchvision.transforms
 
 
 
-
 # ------ Retrieve all the Training Images -------#
 train_img = []
 train_lbl = []
