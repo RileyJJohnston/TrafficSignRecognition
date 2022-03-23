@@ -1,3 +1,4 @@
+# This code is used to generate and store all of the tensors (images) used by the machine learning algorithm.
 
 # Used to handle the images obtained from the dataset. 
 import nntplib
@@ -7,14 +8,12 @@ from PIL import Image, ImageStat
 import os 
 # Mathematical operations
 import numpy as np
-from torch import tensor 
+from torch import tensor, save
 
 # import the building blocks for the neural nets
 from torch.nn import Linear, ReLU, MSELoss, Sequential, Conv2d, MaxPool2d, Module, Dropout
 # import the optimizer function
 from torch.optim import SGD
-# function to generate the train and validation split 
-from sklearn.model_selection import train_test_split
 # used for image processing
 import torchvision.transforms
 
@@ -23,7 +22,6 @@ import torchvision.transforms
 
 # ------ Retrieve all the Training Images -------#
 train_img = []
-train_lbl = []
 
 # Path containing the training images 
 path = 'data\GTSRB\Final_Training\Images'
@@ -53,18 +51,9 @@ for dir in set_dir:
             tensor_img = transform(img)
 
             # Add the new tensor to the list
-            train_img.append(tensor_img)
-            # label is stored in directory index   
-            train_lbl.append(dir_name)
+            train_img.append(tensor_img)   
             # Close the file
             img.close()
-
-# Convert to a numpy array
-train_img = np.array(train_img) # images used for the training process
-
-# Create a train & validation split w/ 0.1 sent to validation
-train_img, val_img, train_lbl, val_lbl = train_test_split(train_img, train_lbl, test_size=0.1)
-
 
 
 
