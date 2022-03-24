@@ -1,7 +1,7 @@
 
 # Used to handle the images obtained from the dataset.
 import nntplib
-from PIL import Image, ImageStat
+from PIL import Image, ImageStat, ImageOps
 
 # Directory functions
 import os
@@ -59,21 +59,23 @@ for dir in set_dir:
             # if it is a jpg file, then proceed
             if file.name.endswith(".jpg"):
                 img = Image.open(dir_path + "\\" + file.name)
-                     
-            # Configure the conversion to tensor
-            transform = torchvision.transforms.Compose([
-                # convert the image to a tensor of range 0->1
-                torchvision.transforms.ToTensor(), 
-            ])
-            # apply the transform
-            tensor_img = transform(img)
 
-            # Add the new tensor to the list
-            train_img.append(tensor_img)
-            # label is stored in directory index   
-            train_lbl.append(dir_name)
-            # Close the file
-            img.close()
+                img = ImageOps.grayscale(img)
+
+                # Configure the conversion to tensor
+                transform = torchvision.transforms.Compose([
+                    # convert the image to a tensor of range 0->1
+                    torchvision.transforms.ToTensor(), 
+                ])
+                # apply the transform
+                tensor_img = transform(img)
+
+                # Add the new tensor to the list
+                train_img.append(tensor_img)
+                # label is stored in directory index   
+                train_lbl.append(dir_name)
+                # Close the file
+                img.close()
 
 end = time.time()
 print(end-start)
@@ -89,7 +91,7 @@ class NN(Module):
         # Defining the sequential layers for the NN
         self.cnn_layers = Sequential(
             # 2D Convolutional layer
-            Conv2d(3, 4, kernel_size=3, stride=1, padding=1),
+            Conv2d(1, 4, kernel_size=3, stride=1, padding=1),
             ReLU(inplace=True),
             MaxPool2d(kernel_size=2, stride=2),
             # 2nd 2D Convolutonal Layer
@@ -112,59 +114,59 @@ class NN(Module):
         print(x)
         return x
 
+# # Define the training function for the NN 
+# def train(epoch):
+#     model.train()
+#     tr_loss = 0
+#     for i, tensor_img in enumerate(train_img):
+#         print(type(tensor_img))
+#         print(type(train_img[i]))
+#         # getting the training set
+#         x_train = train_img[i]
+#         y_train = train_lbl[i]
+#         # getting the validation set
+#         x_val = val_img[i]
+#         y_val = val_lbl[i]
 
-def train(epoch):
-    model.train()
-    tr_loss = 0
-    for i, tensor_img in enumerate(train_img):
-        print(type(tensor_img))
-        print(type(train_img[i]))
-        # getting the training set
-        x_train = train_img[i]
-        y_train = train_lbl[i]
-        # getting the validation set
-        x_val = val_img[i]
-        y_val = val_lbl[i]
+#         # clearing the Gradients of the model parameters
+#         optimizer.zero_grad()
 
-        # clearing the Gradients of the model parameters
-        optimizer.zero_grad()
+#         # prediction for training and validation set
+#         output_train = model(x_train)
+#         output_val = model(x_val)
 
-        # prediction for training and validation set
-        output_train = model(x_train)
-        output_val = model(x_val)
+#         # computing the training and validation loss
+#         loss_train = criterion(output_train, y_train)
+#         loss_val = criterion(output_val, y_val)
+#         train_losses.append(loss_train)
+#         val_losses.append(loss_val)
 
-        # computing the training and validation loss
-        loss_train = criterion(output_train, y_train)
-        loss_val = criterion(output_val, y_val)
-        train_losses.append(loss_train)
-        val_losses.append(loss_val)
-
-        # computing the updated weights of all the model parameters
-        loss_train.backward()
-        optimizer.step()
-        tr_loss = loss_train.item()
-        if epoch % 2 == 0:
-            # printing the validation loss
-            print('Epoch : ', epoch+1, '\t', 'loss :', loss_val)
-
-
-# construct the model defined above
-model = NN()
-# define the optimizer
-optimizer = Adam(model.parameters(), lr=0.07)
-# define the loss function
-criterion = CrossEntropyLoss()
+#         # computing the updated weights of all the model parameters
+#         loss_train.backward()
+#         optimizer.step()
+#         tr_loss = loss_train.item()
+#         if epoch % 2 == 0:
+#             # printing the validation loss
+#             print('Epoch : ', epoch+1, '\t', 'loss :', loss_val)
 
 
-print(model)
+# # construct the model defined above
+# model = NN()
+# # define the optimizer
+# optimizer = Adam(model.parameters(), lr=0.07)
+# # define the loss function
+# criterion = CrossEntropyLoss()
 
 
-# defining the number of epochs
-n_epochs = 25
-# empty list to store training losses
-train_losses = []
-# empty list to store validation losses
-val_losses = []
-# training the model
-for epoch in range(n_epochs):
-    train(epoch)
+# print(model)
+
+
+# # defining the number of epochs
+# n_epochs = 25
+# # empty list to store training losses
+# train_losses = []
+# # empty list to store validation losses
+# val_losses = []
+# # training the model
+# for epoch in range(n_epochs):
+#     train(epoch)
