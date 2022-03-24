@@ -1,7 +1,7 @@
 
 # Used to handle the images obtained from the dataset.
 import nntplib
-from PIL import Image, ImageStat
+from PIL import Image, ImageStat, ImageOps
 
 # Directory functions
 import os
@@ -10,7 +10,7 @@ import numpy as np
 import torch
 
 # import the building blocks for the neural nets
-from torch.nn import Linear, ReLU, CrossEntropyLoss, MSELoss, Sequential, Conv2d, MaxPool2d, Module, Dropout
+from torch.nn import Linear, ReLU, CrossEntropyLoss, MSELoss, Sequential, Conv2d, MaxPool2d, Module, Dropout, BatchNorm2d
 # import the optimizer function
 from torch.optim import SGD
 # function to generate the train and validation split
@@ -25,6 +25,7 @@ from torch.autograd import Variable
 import time
 
 from skimage.io import imread
+import torchvision.transforms.functional as fn
 
 start = time.time()
 
@@ -45,6 +46,9 @@ for dir in set_dir:
     print(str(dir))
     #obtain the name of the directory
     dir_name = dir.name
+    print(dir_name.index)
+    print(dir_name)
+
     dir_path = path + '\\' + dir_name
 
     # Obtain all the images in the directory
@@ -80,21 +84,28 @@ for dir in set_dir:
                     # if it is a jpg file, then proceed
             if file.name.endswith(".jpg"):
                 img = Image.open(dir_path + "\\" + file.name)
-                     
-            # Configure the conversion to tensor
-            transform = torchvision.transforms.Compose([
-                # convert the image to a tensor of range 0->1
-                torchvision.transforms.ToTensor(), 
-            ])
-            # apply the transform
-            tensor_img = transform(img)
+                img = ImageOps.grayscale(img)
+                #img.show()
+                #print("before: " + str(img.size))
+                img = fn.resize(img, size=28)
+                img = fn.center_crop(img, output_size=[28])
+                #print("after: " + str(img.size))
+                # Configure the conversion to tensor
+                transform = torchvision.transforms.Compose([
+                    # convert the image to a tensor of range 0->1
+                    torchvision.transforms.ToTensor(), 
+                ])
 
-            # Add the new tensor to the list
-            train_img.append(tensor_img)
-            # label is stored in directory index   
-            train_lbl.append(dir_name)
-            # Close the file
-            img.close()
+                # apply the transform
+                tensor_img = transform(img)
+
+                # Add the new tensor to the list
+                train_img.append(tensor_img)
+                # label is stored in directory index   
+                #print(type(int(str(dir_name))))
+                train_lbl.append(torch.tensor([[int(str(dir_name))]]))
+                # Close the file
+                img.close()
 
 end = time.time()
 print(end-start)
@@ -126,10 +137,11 @@ class NN(Module):
     def __init__(self):
         super(NN, self).__init__()
 
+        '''
         # Defining the sequential layers for the NN
         self.cnn_layers = Sequential(
             # 2D Convolutional layer
-            Conv2d(3, 4, kernel_size=3, stride=1, padding=1),
+            Conv2d(1, 4, kernel_size=3, stride=1, padding=1),
             ReLU(inplace=True),
             MaxPool2d(kernel_size=2, stride=2),
             # 2nd 2D Convolutonal Layer
@@ -137,9 +149,24 @@ class NN(Module):
             ReLU(inplace=True),
             MaxPool2d(kernel_size=2, stride=2),
         )
+        '''
+
+        self.cnn_layers = Sequential(
+            # Defining a 2D convolution layer
+            Conv2d(1, 4, kernel_size=3, stride=1, padding=1),
+            #BatchNorm2d(4),
+            ReLU(inplace=True),
+            MaxPool2d(kernel_size=2, stride=2),
+            # Defining another 2D convolution layer
+            Conv2d(4, 4, kernel_size=3, stride=1, padding=1),
+            #BatchNorm2d(4),
+            ReLU(inplace=True),
+            MaxPool2d(kernel_size=2, stride=2),
+        )
 
         self.linear_layers = Sequential(
-            Linear(4*7*7, 42)
+            #Linear(4*7*7, 42)
+            Linear(49, 49)
         )
 
     # Forward pass
@@ -157,8 +184,8 @@ def train(epoch):
     model.train()
     tr_loss = 0
     for i, tensor_img in enumerate(train_img):
-        print(type(tensor_img))
-        print(type(train_img[i]))
+        print(type(train_lbl))
+        print(type(train_lbl[i]))
         # getting the training set
         x_train = train_img[i]
         y_train = train_lbl[i]
@@ -178,7 +205,7 @@ def train(epoch):
         loss_val = criterion(output_val, y_val)
         train_losses.append(loss_train)
         val_losses.append(loss_val)
-
+        print("done train iteration")
         # computing the updated weights of all the model parameters
         loss_train.backward()
         optimizer.step()
@@ -195,7 +222,6 @@ optimizer = Adam(model.parameters(), lr=0.07)
 # define the loss function
 criterion = CrossEntropyLoss()
 
-
 print(model)
 
 
@@ -206,5 +232,6 @@ train_losses = []
 # empty list to store validation losses
 val_losses = []
 # training the model
+
 for epoch in range(n_epochs):
     train(epoch)
