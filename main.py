@@ -65,7 +65,7 @@ train_img = np.array(train_img) # images used for the training process
 train_img, val_img, train_lbl, val_lbl = train_test_split(train_img, train_lbl, test_size=0.1)
 
 
-
+print("testing github")
 
 
 
