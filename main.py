@@ -39,10 +39,10 @@ set_dir = os.scandir(path)
 
 # For each image directory
 for dir in set_dir:
-    if (str(dir) == '<DirEntry \'00004\'>'):
-        break
-    print(type(dir))
-    print(str(dir))
+    # Iterate only through the first 4 directories
+    # if (str(dir) == '<DirEntry \'00004\'>'):
+    #     break
+
     #obtain the name of the directory
     dir_name = dir.name
     dir_path = path + '\\' + dir_name
@@ -53,31 +53,10 @@ for dir in set_dir:
     train_img = []
     train_lbl = []
     # for each img
-    print("dir: " + str(dir))
     for file in files:
         # if it is a jpg file, then proceed
         if file.name.endswith(".jpg"):
-            #img = Image.open( dir_path + "\\" + file.name).convert('RGB')
-            #img = imread(filePath, as_gray=True)
-            # normalizing the pixel values
-            #img /= 255.0
-            # converting the type of pixel to float 32
-            #img = img.astype('float32')
-            # Configure the conversion to tensor
-           # transform = torchvision.transforms.Compose([
-            # convert the image to a tensor of range 0->1
-           #     torchvision.transforms.ToTensor(),
-            #])
-            # apply the transform
-            #tensor_img = transform(img)
-
-            # Add the new tensor to the list
-            #train_img.append(img)
-            # label is stored in directory index
-           # train_lbl.append(dir_name)
-            # Close the file
-            #img.close()
-                    # if it is a jpg file, then proceed
+            # if it is a jpg file, then proceed
             if file.name.endswith(".jpg"):
                 img = Image.open(dir_path + "\\" + file.name)
                      
@@ -99,29 +78,10 @@ for dir in set_dir:
 end = time.time()
 print(end-start)
 
-# Convert to a numpy array
-#train_img = np.array(train_img) # images used for the training process
-#train_img = np.array(train_img)
-#train_lbl = np.array(train_lbl)
-
 # Create a train & validation split w/ 0.1 sent to validation
-train_img, val_img, train_lbl, val_lbl = train_test_split(
-    train_img, train_lbl, test_size=0.1)
-print(type(train_img))
-
-#train_img = torch.from_numpy(train_img)
-#train_lbl = torch.from_numpy(train_lbl)
-
-#train_img = torch.from_numpy(train_img)
-#train_img = torch.from_numpy(train_lbl)
-print(type(train_img[1]))
-# convert from numpy array to a tensor
-#train_img = torch.from_numpy(train_img)
-#val_img = torch.from_numpy(val_img)
+train_img, val_img, train_lbl, val_lbl = train_test_split( train_img, train_lbl, test_size=0.1)
 
 # Neural Net architecture
-
-
 class NN(Module):
     def __init__(self):
         super(NN, self).__init__()
