@@ -7,7 +7,7 @@ from PIL import Image, ImageStat
 import os 
 # Mathematical operations
 import numpy as np
-from torch import tensor 
+import torch
 
 # import the building blocks for the neural nets
 from torch.nn import Linear, ReLU, MSELoss, Sequential, Conv2d, MaxPool2d, Module, Dropout
@@ -64,8 +64,35 @@ train_img = np.array(train_img) # images used for the training process
 # Create a train & validation split w/ 0.1 sent to validation
 train_img, val_img, train_lbl, val_lbl = train_test_split(train_img, train_lbl, test_size=0.1)
 
+# convert from numpy array to a tensor
+train_img = torch.from_numpy(train_img)
+val_img = torch.from_numpy(val_img)
 
-print("testing github")
+# Neural Net architecture
+class NN(Module): 
+    def __init__(self): 
+        super(NN, self).__init__()
+
+        # Defining the sequential layers for the NN
+        self.cnn_layers = Sequential(
+            # 2D Convolutional layer
+            Conv2d(1,4, kernel_size=3,stride=1,padding=1),
+            ReLU(inplace=True),
+            MaxPool2d(kernel_size=2, stride=2), 
+            # 2nd 2D Convolutonal Layer
+            Conv2d(4,4,kernel_size=3, stride=1,padding=1), 
+            ReLU(inplace=True),
+            MaxPool2d(kernel_size=2,stride = 2),
+        )
+
+        self.linear_layers = Sequential(
+            Linear(4*7*7, 42)
+        )
 
 
-
+    # Forward pass
+    def forward(self, x): 
+        x = self.cnn_layers(x)
+        x = x.view(x.size(0), -1)
+        x = self.linear_layers(x)
+        return x
