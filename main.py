@@ -58,15 +58,10 @@ for dir in set_dir:
             # Close the file
             img.close()
 
-# Convert to a numpy array
-train_img = np.array(train_img) # images used for the training process
 
 # Create a train & validation split w/ 0.1 sent to validation
 train_img, val_img, train_lbl, val_lbl = train_test_split(train_img, train_lbl, test_size=0.1)
 
-# convert from numpy array to a tensor
-train_img = torch.from_numpy(train_img)
-val_img = torch.from_numpy(val_img)
 
 # Neural Net architecture
 class NN(Module): 
