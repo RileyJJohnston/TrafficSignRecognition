@@ -39,6 +39,10 @@ set_dir = os.scandir(path)
 
 # For each image directory
 for dir in set_dir:
+    if (str(dir) == '<DirEntry \'00004\'>'):
+        break
+    print(type(dir))
+    print(str(dir))
     #obtain the name of the directory
     dir_name = dir.name
     dir_path = path + '\\' + dir_name
@@ -49,15 +53,16 @@ for dir in set_dir:
     train_img = []
     train_lbl = []
     # for each img
+    print("dir: " + str(dir))
     for file in files:
         # if it is a jpg file, then proceed
         if file.name.endswith(".jpg"):
-            filePath = dir_path + "\\" + file.name
-            img = imread(filePath, as_gray=True)
+            #img = Image.open( dir_path + "\\" + file.name).convert('RGB')
+            #img = imread(filePath, as_gray=True)
             # normalizing the pixel values
-            img /= 255.0
+            #img /= 255.0
             # converting the type of pixel to float 32
-            img = img.astype('float32')
+            #img = img.astype('float32')
             # Configure the conversion to tensor
            # transform = torchvision.transforms.Compose([
             # convert the image to a tensor of range 0->1
@@ -67,8 +72,26 @@ for dir in set_dir:
             #tensor_img = transform(img)
 
             # Add the new tensor to the list
-            train_img.append(img)
+            #train_img.append(img)
             # label is stored in directory index
+           # train_lbl.append(dir_name)
+            # Close the file
+            #img.close()
+                    # if it is a jpg file, then proceed
+            if file.name.endswith(".jpg"):
+                img = Image.open(dir_path + "\\" + file.name)
+                     
+            # Configure the conversion to tensor
+            transform = torchvision.transforms.Compose([
+                # convert the image to a tensor of range 0->1
+                torchvision.transforms.ToTensor(), 
+            ])
+            # apply the transform
+            tensor_img = transform(img)
+
+            # Add the new tensor to the list
+            train_img.append(tensor_img)
+            # label is stored in directory index   
             train_lbl.append(dir_name)
             # Close the file
             img.close()
@@ -78,20 +101,20 @@ print(end-start)
 
 # Convert to a numpy array
 #train_img = np.array(train_img) # images used for the training process
-train_img = np.array(train_img)
-train_lbl = np.array(train_lbl)
+#train_img = np.array(train_img)
+#train_lbl = np.array(train_lbl)
 
 # Create a train & validation split w/ 0.1 sent to validation
 train_img, val_img, train_lbl, val_lbl = train_test_split(
     train_img, train_lbl, test_size=0.1)
 print(type(train_img))
 
-train_img = torch.from_numpy(train_img)
-train_lbl = torch.from_numpy(train_lbl)
+#train_img = torch.from_numpy(train_img)
+#train_lbl = torch.from_numpy(train_lbl)
 
 #train_img = torch.from_numpy(train_img)
 #train_img = torch.from_numpy(train_lbl)
-print(type(train_img))
+print(type(train_img[1]))
 # convert from numpy array to a tensor
 #train_img = torch.from_numpy(train_img)
 #val_img = torch.from_numpy(val_img)
@@ -106,7 +129,7 @@ class NN(Module):
         # Defining the sequential layers for the NN
         self.cnn_layers = Sequential(
             # 2D Convolutional layer
-            Conv2d(1, 4, kernel_size=3, stride=1, padding=1),
+            Conv2d(3, 4, kernel_size=3, stride=1, padding=1),
             ReLU(inplace=True),
             MaxPool2d(kernel_size=2, stride=2),
             # 2nd 2D Convolutonal Layer
@@ -133,37 +156,36 @@ class NN(Module):
 def train(epoch):
     model.train()
     tr_loss = 0
-    # getting the training set
-    x_train, y_train = Variable(train_img), Variable(train_lbl)
-    # getting the validation set
-    x_val, y_val = Variable(val_img), Variable(val_lbl)
-    # converting the data into GPU format
-    if torch.cuda.is_available():
-        x_train = x_train.cuda()
-        y_train = y_train.cuda()
-        x_val = x_val.cuda()
-        y_val = y_val.cuda()
+    for i, tensor_img in enumerate(train_img):
+        print(type(tensor_img))
+        print(type(train_img[i]))
+        # getting the training set
+        x_train = train_img[i]
+        y_train = train_lbl[i]
+        # getting the validation set
+        x_val = val_img[i]
+        y_val = val_lbl[i]
 
-    # clearing the Gradients of the model parameters
-    optimizer.zero_grad()
+        # clearing the Gradients of the model parameters
+        optimizer.zero_grad()
 
-    # prediction for training and validation set
-    output_train = model(x_train)
-    output_val = model(x_val)
+        # prediction for training and validation set
+        output_train = model(x_train)
+        output_val = model(x_val)
 
-    # computing the training and validation loss
-    loss_train = criterion(output_train, y_train)
-    loss_val = criterion(output_val, y_val)
-    train_losses.append(loss_train)
-    val_losses.append(loss_val)
+        # computing the training and validation loss
+        loss_train = criterion(output_train, y_train)
+        loss_val = criterion(output_val, y_val)
+        train_losses.append(loss_train)
+        val_losses.append(loss_val)
 
-    # computing the updated weights of all the model parameters
-    loss_train.backward()
-    optimizer.step()
-    tr_loss = loss_train.item()
-    if epoch % 2 == 0:
-        # printing the validation loss
-        print('Epoch : ', epoch+1, '\t', 'loss :', loss_val)
+        # computing the updated weights of all the model parameters
+        loss_train.backward()
+        optimizer.step()
+        tr_loss = loss_train.item()
+        if epoch % 2 == 0:
+            # printing the validation loss
+            print('Epoch : ', epoch+1, '\t', 'loss :', loss_val)
 
 
 # construct the model defined above
@@ -172,10 +194,7 @@ model = NN()
 optimizer = Adam(model.parameters(), lr=0.07)
 # define the loss function
 criterion = CrossEntropyLoss()
-# check if a GPU is available
-if torch.cuda.is_available():
-    model = model.cuda()
-    criterion = criterion.cuda()
+
 
 print(model)
 
