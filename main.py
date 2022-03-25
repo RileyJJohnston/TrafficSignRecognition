@@ -40,7 +40,7 @@ set_dir = os.scandir(path)
 
 # For each image directory
 for dir in set_dir:
-    if (str(dir) == '<DirEntry \'00004\'>'):
+    if (str(dir) == '<DirEntry \'00042\'>'):
         break
     print(type(dir))
     print(str(dir))
@@ -87,8 +87,8 @@ for dir in set_dir:
                 img = Image.open(dir_path + "\\" + file.name) 
                 #obtain the size of the image
                 width, height = img.size
-                #if (width < 28 or height < 28):
-                #    print("Ignoring image with dimensions: " + str(height) + "x" + str(width))
+                if (width < 28 or height < 28):
+                   print("Ignoring image with dimensions: " + str(height) + "x" + str(width))
                 img = ImageOps.grayscale(img)
                 #img.show()
                 #print("before: " + str(img.size))
@@ -211,9 +211,11 @@ def train(epoch):
         # getting the training set
         x_train = train_img[i]
         y_train = train_lbl[i]
+        print(len(train_lbl))
         # getting the validation set
         x_val = val_img[i]
         y_val = val_lbl[i]
+
 
         # clearing the Gradients of the model parameters
         optimizer.zero_grad()
@@ -221,10 +223,21 @@ def train(epoch):
         # prediction for training and validation set
         output_train = model(x_train)
         output_val = model(x_val)
+        # obtain 1D tensors
+        output_train = output_train[0]
+        output_val  = output_val[0]
 
+        # obtain 1D labels
+        y_train = y_train[0]
+        y_train = y_train[0]
+        y_val = y_val[0]
+        y_val = y_val[0]
+
+        print(y_train)
         # computing the training and validation loss
         loss_train = criterion(output_train, y_train)
         loss_val = criterion(output_val, y_val)
+        
         train_losses.append(loss_train)
         val_losses.append(loss_val)
         print("done train iteration")
