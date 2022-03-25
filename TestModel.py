@@ -130,10 +130,9 @@ train_img, val_img, train_lbl, val_lbl = train_test_split(train_img, train_lbl, 
 
 
 
-index = 3
-print(train_img[index])
+index = 15
 print(train_lbl[index])
-predict =model(train_img[index])
+predict = model(train_img[index])
 print(predict)
 print(torch.argmax(predict))
 

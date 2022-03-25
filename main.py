@@ -51,9 +51,9 @@ for dir in set_dir:
     # Obtain all the images in the directory
     files = os.scandir(dir_path)
 
-
     # for each img
     for file in files:
+
         # if it is a jpg file, then proceed
         if file.name.endswith(".jpg"):
             img = Image.open(dir_path + "\\" + file.name) 
@@ -89,8 +89,7 @@ for dir in set_dir:
 
 
 # Create a train & validation split w/ 0.1 sent to validation
-train_img, val_img, train_lbl, val_lbl = train_test_split(
-    train_img, train_lbl, test_size=0.1)
+train_img, val_img, train_lbl, val_lbl = train_test_split(train_img, train_lbl, test_size=0.1)
 
 
 
@@ -130,7 +129,7 @@ class NN(Module):
             Linear(4*7*7, 42),  # flatten the output of the layers so that the second argument to the Linear function is the number of classes
 
             # ReLU(inplace=True),
-            Softmax(dim=1)
+            # Softmax(dim=1)
         )
 
     # Forward pass
@@ -154,7 +153,7 @@ def train(epoch):
         # getting the training set
         x_train = train_img[i]
         y_train = train_lbl[i]
-
+      
 
         # clearing the Gradients of the model parameters
         optimizer.zero_grad()
@@ -232,6 +231,14 @@ print(len(train_lbl))
 
 test_val1 = model(train_img[4])
 print(train_lbl[4])
+print(test_val1)
+
+test_val1 = model(train_img[5])
+print(train_lbl[5])
+print(test_val1)
+
+test_val1 = model(train_img[6])
+print(train_lbl[6])
 print(test_val1)
 
 end = time.time()
