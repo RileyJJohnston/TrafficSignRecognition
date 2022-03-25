@@ -129,7 +129,7 @@ class NN(Module):
         self.linear_layers = Sequential(
             Linear(4*7*7, 42),  # flatten the output of the layers so that the second argument to the Linear function is the number of classes
 
-            ReLU(inplace=True),
+            # ReLU(inplace=True),
             Softmax(dim=1)
         )
 
@@ -212,7 +212,7 @@ criterion = CrossEntropyLoss()
 
 
 # defining the number of epochs
-n_epochs = 10
+n_epochs = 1
 # empty list to store training losses
 train_losses = []
 # empty list to store validation losses

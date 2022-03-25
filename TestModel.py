@@ -45,7 +45,7 @@ class NN(Module):
 
         self.linear_layers = Sequential(
             Linear(4*7*7, 42),  # flatten the output of the layers so that the second argument to the Linear function is the number of classes
-            ReLU(inplace=True),
+            # ReLU(inplace=True),
             Softmax(dim=1)
         )
 
@@ -57,6 +57,86 @@ class NN(Module):
         x = self.linear_layers(x)
         return x
 
-
 model = torch.load('trafficRecognitionModel.pt')
 model.eval()
+
+
+
+
+
+
+# ------ Retrieve all the Training Images -------#
+train_img = []
+train_lbl = []
+
+# Path containing the training images
+path = 'data\GTSRB\Final_Training\Images'
+# Obtain the set of directories
+set_dir = os.scandir(path)
+
+# For each image directory
+for dir in set_dir:
+    if (str(dir) == '<DirEntry \'00042\'>'):
+        continue # dont use this folder for now
+
+    #obtain the name of the directory
+    dir_name = dir.name
+
+    dir_path = path + '\\' + dir_name
+
+    # Obtain all the images in the directory
+    files = os.scandir(dir_path)
+
+
+    # for each img
+    for file in files:
+        # if it is a jpg file, then proceed
+        if file.name.endswith(".jpg"):
+            img = Image.open(dir_path + "\\" + file.name) 
+            #obtain the size of the image
+            width, height = img.size
+
+            # Convert the image to grayscale
+            img = ImageOps.grayscale(img)
+            #img.show()
+
+            img = fn.resize(img, size=28)
+            img = fn.center_crop(img, output_size=[28])
+
+            # Configure the conversion to tensor
+            transform = torchvision.transforms.Compose([
+                # convert the image to a tensor of range 0->1
+                torchvision.transforms.ToTensor(), 
+            ])
+
+            # apply the transform
+            tensor_img = transform(img)
+
+            #tensor_img = tensor_img.view(1, -1)
+            # Add the new tensor to the list
+            train_img.append(tensor_img)
+            # label is stored in directory index   
+
+            train_lbl.append(torch.tensor([[int(str(dir_name))]]))#).view(1, -1))
+            # Close the file
+            img.close()
+
+
+
+
+# Create a train & validation split w/ 0.1 sent to validation
+train_img, val_img, train_lbl, val_lbl = train_test_split(train_img, train_lbl, test_size=0.1)
+
+
+
+
+index = 3
+print(train_img[index])
+print(train_lbl[index])
+predict =model(train_img[index])
+print(predict)
+print(torch.argmax(predict))
+
+
+
+
