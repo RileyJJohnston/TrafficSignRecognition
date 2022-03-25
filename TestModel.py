@@ -60,3 +60,52 @@ class NN(Module):
 
 model = torch.load('trafficRecognitionModel.pt')
 model.eval()
+
+# ------ Retrieve all the Testing Images -------#
+test_img = []
+test_lbl = []
+
+# Path containing the testing images
+path = 'data\GTSRB\Final_Test\Images'
+# Obtain the set of directories
+set_dir = os.scandir(path)
+
+dir_path = set_dir
+
+# Obtain all the images in the directory
+files = os.scandir(dir_path)
+for file in files:
+    # if it is a jpg file, then proceed
+    if file.name.endswith(".jpg"):
+        if file.name.endswith(".jpg"):
+            img = Image.open(dir_path + "\\" + file.name)
+            #obtain the size of the image
+            width, height = img.size
+            #if (width < 28 or height < 28):
+            #   print("Ignoring image with dimensions: " + str(height) + "x" + str(width))
+            img = ImageOps.grayscale(img)
+            #img.show()
+            #print("before: " + str(img.size))
+            img = fn.resize(img, size=28)
+            img = fn.center_crop(img, output_size=[28])
+            #img.show()
+            #print("after: " + str(img.size))
+            # Configure the conversion to tensor
+            transform = torchvision.transforms.Compose([
+                # convert the image to a tensor of range 0->1
+                torchvision.transforms.ToTensor(),
+            ])
+
+            # apply the transform
+            tensor_img = transform(img)
+
+            #tensor_img = tensor_img.view(1, -1)
+            # Add the new tensor to the list
+            test_img.append(tensor_img)
+            # label is stored in directory index
+            #print(type(int(str(dir_name))))
+            # ).view(1, -1))
+            test_lbl = 
+            test_lbl.append(torch.tensor([[test_lbl]]))
+            # Close the file
+            img.close()
