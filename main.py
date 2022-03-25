@@ -40,7 +40,7 @@ set_dir = os.scandir(path)
 
 # For each image directory
 for dir in set_dir:
-    if (str(dir) == '<DirEntry \'00042\'>'):
+    if (str(dir) == '<DirEntry \'00004\'>'):
         break
     print(type(dir))
     print(str(dir))
@@ -87,8 +87,8 @@ for dir in set_dir:
                 img = Image.open(dir_path + "\\" + file.name) 
                 #obtain the size of the image
                 width, height = img.size
-                if (width < 28 or height < 28):
-                   print("Ignoring image with dimensions: " + str(height) + "x" + str(width))
+                #if (width < 28 or height < 28):
+                #   print("Ignoring image with dimensions: " + str(height) + "x" + str(width))
                 img = ImageOps.grayscale(img)
                 #img.show()
                 #print("before: " + str(img.size))
@@ -183,22 +183,22 @@ class NN(Module):
     # Forward pass
     def forward(self, x):
         print("in forward")
-        print(x)
+        #print(x)
         x = self.cnn_layers(x)
-        print(x)
-        print(x.shape)
+        #print(x)
+        #print(x.shape)
         x = x.view(x.size(0), -1)
-        print(x)
-        print(x.shape)
+        #print(x)
+        #print(x.shape)
         x = x.view(1,-1)
         #x = torch.unsqueeze(x,0)
-        print(x)
-        print(x.shape)
+        #print(x)
+        #print(x.shape)
         x = self.linear_layers(x)
         print("complete")
         #x = x = x.view(1, x.size(0))
-        print(x)
-        print(x.shape)
+        #print(x)
+        #print(x.shape)
         return x
 
 
@@ -212,43 +212,61 @@ def train(epoch):
         x_train = train_img[i]
         y_train = train_lbl[i]
         print(len(train_lbl))
-        # getting the validation set
-        x_val = val_img[i]
-        y_val = val_lbl[i]
 
+        print("epoch: " + str(epoch) + "    i: " + str(i) + "  val_img[i-1]: ")
+        print(str(len(train_img)) + "    " + str(len(train_lbl)) + "    " + str(len(val_img)) + "    " + str(len(val_lbl)) + "\n")
 
         # clearing the Gradients of the model parameters
         optimizer.zero_grad()
 
         # prediction for training and validation set
         output_train = model(x_train)
-        output_val = model(x_val)
+
         # obtain 1D tensors
         output_train = output_train[0]
-        output_val  = output_val[0]
 
         # obtain 1D labels
         y_train = y_train[0]
         y_train = y_train[0]
-        y_val = y_val[0]
-        y_val = y_val[0]
+
 
         print(y_train)
         # computing the training and validation loss
         loss_train = criterion(output_train, y_train)
-        loss_val = criterion(output_val, y_val)
         
         train_losses.append(loss_train)
-        val_losses.append(loss_val)
         print("done train iteration")
         # computing the updated weights of all the model parameters
         loss_train.backward()
         optimizer.step()
         tr_loss = loss_train.item()
+
+    
+    # Seperate the evaluation from the training
+    # Run the evaluation portion of the dataset through the neural network
+    model.eval()
+    for i, tensor_img in enumerate(val_img):
+        # getting the validation set
+        x_val = val_img[i]
+        y_val = val_lbl[i]
+
+
+        # prediction for validation set
+        output_val = model(x_val)
+
+        # obtain 1D labels
+        y_val = y_val[0]
+        y_val = y_val[0]
+
+        # obtain 1D tensors
+        output_val  = output_val[0]
+
+        # computing the validation loss
+        loss_val = criterion(output_val, y_val)
+        val_losses.append(loss_val)
         if epoch % 2 == 0:
             # printing the validation loss
             print('Epoch : ', epoch+1, '\t', 'loss :', loss_val)
-
 
 # construct the model defined above
 model = NN()
