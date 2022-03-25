@@ -5,7 +5,7 @@ import string
 
 
 #Root folder path
-path = 'data\GTSRB\Final_Training\Images'
+path = 'data\GTSRB\Final_Test'
 
 # Obtain the set of directories
 set_dir = os.scandir(path)
