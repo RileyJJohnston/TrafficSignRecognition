@@ -41,7 +41,7 @@ set_dir = os.scandir(path)
 # For each image directory
 for dir in set_dir:
     if (str(dir) == '<DirEntry \'00042\'>'):
-        break
+        continue # dont use this folder for now
     print(type(dir))
     print(str(dir))
     #obtain the name of the directory
@@ -54,65 +54,41 @@ for dir in set_dir:
     # Obtain all the images in the directory
     files = os.scandir(dir_path)
 
-    train_img = []
-    train_lbl = []
+
     # for each img
     for file in files:
         # if it is a jpg file, then proceed
         if file.name.endswith(".jpg"):
+            img = Image.open(dir_path + "\\" + file.name) 
+            #obtain the size of the image
+            width, height = img.size
 
-            #img = Image.open( dir_path + "\\" + file.name).convert('RGB')
-            #img = imread(filePath, as_gray=True)
-            # normalizing the pixel values
-            #img /= 255.0
-            # converting the type of pixel to float 32
-            #img = img.astype('float32')
+            # Convert the image to grayscale
+            img = ImageOps.grayscale(img)
+            #img.show()
+
+            img = fn.resize(img, size=28)
+            img = fn.center_crop(img, output_size=[28])
+
             # Configure the conversion to tensor
-           # transform = torchvision.transforms.Compose([
-            # convert the image to a tensor of range 0->1
-           #     torchvision.transforms.ToTensor(),
-            #])
+            transform = torchvision.transforms.Compose([
+                # convert the image to a tensor of range 0->1
+                torchvision.transforms.ToTensor(), 
+            ])
+
             # apply the transform
-            #tensor_img = transform(img)
+            tensor_img = transform(img)
 
+            #tensor_img = tensor_img.view(1, -1)
             # Add the new tensor to the list
-            #train_img.append(img)
-            # label is stored in directory index
-           # train_lbl.append(dir_name)
+            train_img.append(tensor_img)
+            # label is stored in directory index   
+
+            train_lbl.append(torch.tensor([[int(str(dir_name))]]))#).view(1, -1))
             # Close the file
-            #img.close()
-                    # if it is a jpg file, then proceed
-            if file.name.endswith(".jpg"):
-                img = Image.open(dir_path + "\\" + file.name) 
-                #obtain the size of the image
-                width, height = img.size
-                #if (width < 28 or height < 28):
-                #   print("Ignoring image with dimensions: " + str(height) + "x" + str(width))
-                img = ImageOps.grayscale(img)
-                #img.show()
-                #print("before: " + str(img.size))
-                img = fn.resize(img, size=28)
-                img = fn.center_crop(img, output_size=[28])
-                #img.show()
-                #print("after: " + str(img.size))
-                # Configure the conversion to tensor
-                transform = torchvision.transforms.Compose([
-                    # convert the image to a tensor of range 0->1
-                    torchvision.transforms.ToTensor(), 
-                ])
+            img.close()
 
-                # apply the transform
-                tensor_img = transform(img)
-
-                #tensor_img = tensor_img.view(1, -1)
-                # Add the new tensor to the list
-                train_img.append(tensor_img)
-                # label is stored in directory index   
-                #print(type(int(str(dir_name))))
-                train_lbl.append(torch.tensor([[int(str(dir_name))]]))#).view(1, -1))
-                # Close the file
-                img.close()
-
+print(len(train_img))
 end = time.time()
 print(end-start)
 
@@ -287,6 +263,8 @@ for epoch in range(n_epochs):
 
 
 # test one of the images to see if it is working correctly 
-test_val1 = model(train_img[0])
-print(train_lbl[0])
+print(len(train_lbl))
+
+test_val1 = model(train_img[4])
+print(train_lbl[4])
 print(test_val1)
