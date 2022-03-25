@@ -212,7 +212,7 @@ criterion = CrossEntropyLoss()
 
 
 # defining the number of epochs
-n_epochs = 25
+n_epochs = 10
 # empty list to store training losses
 train_losses = []
 # empty list to store validation losses
@@ -220,11 +220,11 @@ val_losses = []
 # training the model
 
 for epoch in range(n_epochs):
+    print("Training in Epoch: " + str(epoch))
     train(epoch)
 
+torch.save(model,'trafficRecognitionModel.pt')
 
-end = time.time()
-print("Total time:"  + end-start)
 
 
 # test one of the images to see if it is working correctly 
@@ -233,3 +233,6 @@ print(len(train_lbl))
 test_val1 = model(train_img[4])
 print(train_lbl[4])
 print(test_val1)
+
+end = time.time()
+print("Total time:"  + str(end-start))
