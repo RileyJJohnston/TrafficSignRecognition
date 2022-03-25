@@ -173,11 +173,11 @@ class NN(Module):
         )
 
         self.linear_layers = Sequential(
-            #Linear(4*7*7, 42)  # TODO flatten the output of the layers so that the second argument to the Linear function is the number of classes
+            Linear(4*7*7, 42)  # TODO flatten the output of the layers so that the second argument to the Linear function is the number of classes
             #Linear(784, 784)
             #Linear(49,49)
             #Linear(49, 784)
-            Linear(49,784)
+            #Linear(49,784)
         )
 
     # Forward pass
@@ -188,12 +188,15 @@ class NN(Module):
         print(x)
         print(x.shape)
         x = x.view(x.size(0), -1)
-        #x = torch.unsqueeze(x,1)
-        #x = x.view(1,-1)
+        print(x)
+        print(x.shape)
+        x = x.view(1,-1)
+        #x = torch.unsqueeze(x,0)
         print(x)
         print(x.shape)
         x = self.linear_layers(x)
         print("complete")
+        #x = x = x.view(1, x.size(0))
         print(x)
         print(x.shape)
         return x
