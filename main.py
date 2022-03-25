@@ -106,67 +106,58 @@ class NN(Module):
 
     # Forward pass
     def forward(self, x):
-        print("in forward")
         x = self.cnn_layers(x)
         x = x.view(x.size(0), -1)
         x = self.linear_layers(x)
-        print("complete")
-        print(x)
         return x
 
-# # Define the training function for the NN 
-# def train(epoch):
-#     model.train()
-#     tr_loss = 0
-#     for i, tensor_img in enumerate(train_img):
-#         print(type(tensor_img))
-#         print(type(train_img[i]))
-#         # getting the training set
-#         x_train = train_img[i]
-#         y_train = train_lbl[i]
-#         # getting the validation set
-#         x_val = val_img[i]
-#         y_val = val_lbl[i]
+# Define the training function for the NN 
+def train(epoch):
+    model.train()
+    tr_loss = 0
+    for i, tensor_img in enumerate(train_img):
+        # getting the training set
+        x_train = train_img[i]
+        y_train = train_lbl[i]
+        # getting the validation set
+        x_val = val_img[i]
+        y_val = val_lbl[i]
 
-#         # clearing the Gradients of the model parameters
-#         optimizer.zero_grad()
+        # clearing the Gradients of the model parameters
+        optimizer.zero_grad()
 
-#         # prediction for training and validation set
-#         output_train = model(x_train)
-#         output_val = model(x_val)
+        # prediction for training and validation set
+        output_train = model(x_train)
+        output_val = model(x_val)
 
-#         # computing the training and validation loss
-#         loss_train = criterion(output_train, y_train)
-#         loss_val = criterion(output_val, y_val)
-#         train_losses.append(loss_train)
-#         val_losses.append(loss_val)
+        # computing the training and validation loss
+        loss_train = criterion(output_train, y_train)
+        loss_val = criterion(output_val, y_val)
+        train_losses.append(loss_train)
+        val_losses.append(loss_val)
 
-#         # computing the updated weights of all the model parameters
-#         loss_train.backward()
-#         optimizer.step()
-#         tr_loss = loss_train.item()
-#         if epoch % 2 == 0:
-#             # printing the validation loss
-#             print('Epoch : ', epoch+1, '\t', 'loss :', loss_val)
+        # computing the updated weights of all the model parameters
+        loss_train.backward()
+        optimizer.step()
+        tr_loss = loss_train.item()
 
 
-# # construct the model defined above
-# model = NN()
-# # define the optimizer
-# optimizer = Adam(model.parameters(), lr=0.07)
-# # define the loss function
-# criterion = CrossEntropyLoss()
+
+# construct the model defined above
+model = NN()
+# define the optimizer
+optimizer = Adam(model.parameters(), lr=0.07)
+# define the loss function
+criterion = CrossEntropyLoss()
 
 
-# print(model)
 
-
-# # defining the number of epochs
-# n_epochs = 25
-# # empty list to store training losses
-# train_losses = []
-# # empty list to store validation losses
-# val_losses = []
-# # training the model
-# for epoch in range(n_epochs):
-#     train(epoch)
+# defining the number of epochs
+n_epochs = 25
+# empty list to store training losses
+train_losses = []
+# empty list to store validation losses
+val_losses = []
+# training the model
+for epoch in range(n_epochs):
+    train(epoch)
