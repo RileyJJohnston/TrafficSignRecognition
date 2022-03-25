@@ -61,6 +61,7 @@ for dir in set_dir:
     for file in files:
         # if it is a jpg file, then proceed
         if file.name.endswith(".jpg"):
+
             #img = Image.open( dir_path + "\\" + file.name).convert('RGB')
             #img = imread(filePath, as_gray=True)
             # normalizing the pixel values
@@ -83,12 +84,17 @@ for dir in set_dir:
             #img.close()
                     # if it is a jpg file, then proceed
             if file.name.endswith(".jpg"):
-                img = Image.open(dir_path + "\\" + file.name)
+                img = Image.open(dir_path + "\\" + file.name) 
+                #obtain the size of the image
+                width, height = img.size
+                #if (width < 28 or height < 28):
+                #    print("Ignoring image with dimensions: " + str(height) + "x" + str(width))
                 img = ImageOps.grayscale(img)
                 #img.show()
                 #print("before: " + str(img.size))
                 img = fn.resize(img, size=28)
                 img = fn.center_crop(img, output_size=[28])
+                #img.show()
                 #print("after: " + str(img.size))
                 # Configure the conversion to tensor
                 transform = torchvision.transforms.Compose([
@@ -99,11 +105,12 @@ for dir in set_dir:
                 # apply the transform
                 tensor_img = transform(img)
 
+                #tensor_img = tensor_img.view(1, -1)
                 # Add the new tensor to the list
                 train_img.append(tensor_img)
                 # label is stored in directory index   
                 #print(type(int(str(dir_name))))
-                train_lbl.append(torch.tensor([[int(str(dir_name))]]))
+                train_lbl.append(torch.tensor([[int(str(dir_name))]]))#).view(1, -1))
                 # Close the file
                 img.close()
 
@@ -120,6 +127,9 @@ train_img, val_img, train_lbl, val_lbl = train_test_split(
     train_img, train_lbl, test_size=0.1)
 print(type(train_img))
 
+
+
+
 #train_img = torch.from_numpy(train_img)
 #train_lbl = torch.from_numpy(train_lbl)
 
@@ -131,8 +141,6 @@ print(type(train_img[1]))
 #val_img = torch.from_numpy(val_img)
 
 # Neural Net architecture
-
-
 class NN(Module):
     def __init__(self):
         super(NN, self).__init__()
@@ -153,7 +161,7 @@ class NN(Module):
 
         self.cnn_layers = Sequential(
             # Defining a 2D convolution layer
-            Conv2d(1, 4, kernel_size=3, stride=1, padding=1),
+            Conv2d(1, 4, kernel_size=3, stride=1, padding=1), #takes as args: in_channels, out_channels ....   -- if greyscale, in_channels is 1.  If RGB it is 3.  The out_channels equals the number of in_channels to the next Conv2D layer
             #BatchNorm2d(4),
             ReLU(inplace=True),
             MaxPool2d(kernel_size=2, stride=2),
@@ -165,18 +173,29 @@ class NN(Module):
         )
 
         self.linear_layers = Sequential(
-            #Linear(4*7*7, 42)
-            Linear(49, 49)
+            #Linear(4*7*7, 42)  # TODO flatten the output of the layers so that the second argument to the Linear function is the number of classes
+            #Linear(784, 784)
+            #Linear(49,49)
+            #Linear(49, 784)
+            Linear(49,784)
         )
 
     # Forward pass
     def forward(self, x):
         print("in forward")
+        print(x)
         x = self.cnn_layers(x)
+        print(x)
+        print(x.shape)
         x = x.view(x.size(0), -1)
+        #x = torch.unsqueeze(x,1)
+        #x = x.view(1,-1)
+        print(x)
+        print(x.shape)
         x = self.linear_layers(x)
         print("complete")
         print(x)
+        print(x.shape)
         return x
 
 
