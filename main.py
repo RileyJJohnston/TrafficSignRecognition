@@ -10,7 +10,7 @@ import numpy as np
 import torch
 
 # import the building blocks for the neural nets
-from torch.nn import Linear, ReLU, CrossEntropyLoss, MSELoss, Sequential, Conv2d, MaxPool2d, Module, Dropout, BatchNorm2d
+from torch.nn import Linear, ReLU, CrossEntropyLoss, MSELoss, Sequential, Conv2d, MaxPool2d, Module, Softmax, BatchNorm2d
 # import the optimizer function
 from torch.optim import SGD
 # function to generate the train and validation split
@@ -40,7 +40,7 @@ set_dir = os.scandir(path)
 
 # For each image directory
 for dir in set_dir:
-    if (str(dir) == '<DirEntry \'00004\'>'):
+    if (str(dir) == '<DirEntry \'00042\'>'):
         break
     print(type(dir))
     print(str(dir))
@@ -173,11 +173,13 @@ class NN(Module):
         )
 
         self.linear_layers = Sequential(
-            Linear(4*7*7, 42)  # TODO flatten the output of the layers so that the second argument to the Linear function is the number of classes
+            Linear(4*7*7, 42),  # flatten the output of the layers so that the second argument to the Linear function is the number of classes
             #Linear(784, 784)
             #Linear(49,49)
             #Linear(49, 784)
             #Linear(49,784)
+            ReLU(inplace=True),
+            Softmax(dim=1)
         )
 
     # Forward pass
@@ -288,3 +290,9 @@ val_losses = []
 
 for epoch in range(n_epochs):
     train(epoch)
+
+
+# test one of the images to see if it is working correctly 
+test_val1 = model(train_img[0])
+print(train_lbl[0])
+print(test_val1)
