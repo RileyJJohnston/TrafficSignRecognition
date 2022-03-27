@@ -166,7 +166,7 @@ class NN(Module):
         #x = torch.unsqueeze(x,0)      
         x = self.linear_layers(x)
         # generate a softmax output for the final layer     
-        x = F.softmax(x,1)
+        # x = F.softmax(x,1)
         return x
 
 # Define the training function for the NN 
@@ -188,18 +188,18 @@ def train(epoch):
     for i, data in enumerate(train_loader): 
         #obtain the image and label
         img, lbl = data
+        
+        #!!!!! NEED to change this if larger batches are going to be used
+        lbl = torch.reshape(lbl, [1])
 
         # zero the gradients
         optimizer.zero_grad()
 
         # obtain the prediction using the model
         predict = model(img)
-
-        # Removes the unnecessary dimensions on the label tensor 
-        lbl = torch.squeeze(lbl)
-
+  
         # Compute the loss
-        loss = criterion(predict[0], lbl)
+        loss = criterion(predict, lbl)
         loss.backward()
 
         # Adjust the learning weights
@@ -209,49 +209,31 @@ def train(epoch):
         tr_loss = loss.item()
 
     print("Training loss is: " + str(tr_loss))
-
-
-
-
-
-
-    # # clearing the Gradients of the model parameters
-    # optimizer.zero_grad()
-    # # prediction for training and validation set
-    # output_train = model(x_train)
-    # # computing the training and validation loss
-    # loss_train = criterion(output_train, y_train)
-    # train_losses.append(loss_train)
-    # # computing the updated weights of all the model parameters
-    # loss_train.backward()
-    # optimizer.step()
-    # tr_loss = loss_train.item()
-
-
-
     
     # Seperate the evaluation from the training
     # Run the evaluation portion of the dataset through the neural network
     model.eval()
-    for i, tensor_img in enumerate(val_img):
-        # getting the validation set
-        x_val = val_img[i]
-        y_val = val_lbl[i]
+    # Create a dataset for the validation data, re-shuffles every epoch 
+    eval_data = ImageDataset(val_img, val_lbl) 
+    eval_loader = DataLoader(dataset=eval_data,batch_size=1, shuffle=True)
 
+    # for each img/label in the batch
+    for i, data in enumerate(eval_loader): 
+        #obtain the image and label
+        img, lbl = data
 
-        # prediction for validation set
-        output_val = model(x_val)
+        lbl = torch.reshape(lbl, [1])
+        
+        # zero the gradients
+        optimizer.zero_grad()
 
-        # obtain 1D labels
-        y_val = y_val[0]
-        y_val = y_val[0]
+        # obtain the prediction using the model
+        predict = model(img)
 
-        # obtain 1D tensors
-        output_val  = output_val[0]
+        # Compute the loss
+        loss = criterion(predict, lbl)
+        loss.backward()
 
-        # computing the validation loss
-        loss_val = criterion(output_val, y_val)
-        val_losses.append(loss_val)
 
 # construct the model defined above
 model = NN()
@@ -278,9 +260,6 @@ torch.save(model,'trafficRecognitionModel.pt')
 
 
 
-# test one of the images to see if it is working correctly 
-print(len(train_lbl))
-
 test_val1 = model(train_img[4])
 print(train_lbl[4])
 print(test_val1)
@@ -291,6 +270,10 @@ print(test_val1)
 
 test_val1 = model(train_img[6])
 print(train_lbl[6])
+print(test_val1)
+
+test_val1 = model(train_img[6250])
+print(train_lbl[6250])
 print(test_val1)
 
 end = time.time()
