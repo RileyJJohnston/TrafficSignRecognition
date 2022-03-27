@@ -9,6 +9,7 @@ import os
 import numpy as np
 import torch
 
+
 # import the building blocks for the neural nets
 from torch.nn import Linear, ReLU, CrossEntropyLoss, MSELoss, Sequential, Conv2d, MaxPool2d, Module, Softmax, BatchNorm2d
 # import the optimizer function
@@ -21,6 +22,8 @@ import torchvision.transforms
 from torch.optim import Adam, SGD
 # import wrapper for tensors
 from torch.autograd import Variable
+# Softmax function
+import torch.nn.functional as F
 # import time to measure time taken by aspects of the program
 import time
 
@@ -141,8 +144,9 @@ class NN(Module):
         # Flatten the output 
         x = x.view(1,-1)
         #x = torch.unsqueeze(x,0)      
-        x = self.linear_layers(x)     
-       
+        x = self.linear_layers(x)
+        # generate a softmax output for the final layer     
+        x = F.softmax(x,1)
         return x
 
 # Define the training function for the NN 
