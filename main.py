@@ -1,5 +1,7 @@
 
 # Used to handle the images obtained from the dataset.
+from cProfile import label
+import enum
 import nntplib
 from PIL import Image, ImageStat, ImageOps
 
@@ -9,6 +11,8 @@ import os
 import numpy as np
 import torch
 
+# import some data loading functions 
+from torch.utils.data import Dataset, DataLoader
 
 # import the building blocks for the neural nets
 from torch.nn import Linear, ReLU, CrossEntropyLoss, MSELoss, Sequential, Conv2d, MaxPool2d, Module, Softmax, BatchNorm2d
@@ -94,6 +98,22 @@ for dir in set_dir:
 # Create a train & validation split w/ 0.1 sent to validation
 train_img, val_img, train_lbl, val_lbl = train_test_split(train_img, train_lbl, test_size=0.1)
 
+# Dataset class used to handle the images used in training
+class ImageDataset(Dataset):
+    # Define the images and the lables fo rthe images
+    def __init__(self, img, lbl): 
+        self.img_labels =  lbl
+        self.img = img
+
+    # return the length of the dataset
+    def __len__(self): 
+        return len(self.img_labels)
+
+    # obtain the image and the corresponding label
+    def __getitem__(self, index): 
+        return self.img[index], self.img_labels[index] 
+
+
 
 
 # Neural Net architecture
@@ -129,8 +149,8 @@ class NN(Module):
         )
 
         self.linear_layers = Sequential(
-            Linear(4*7*7, 42),  # flatten the output of the layers so that the second argument to the Linear function is the number of classes
-
+            # Linear(4*7*7, 42),  # flatten the output of the layers so that the second argument to the Linear function is the number of classes
+            Linear(4*7*7 , 42),
             # ReLU(inplace=True),
             # Softmax(dim=1)
         )
@@ -153,34 +173,61 @@ class NN(Module):
 def train(epoch):
     model.train()
     tr_loss = 0
-    for i, tensor_img in enumerate(train_img):
-        # getting the training set
-        x_train = train_img[i]
-        y_train = train_lbl[i]
-      
 
-        # clearing the Gradients of the model parameters
+    # # Formatting the training set into tensors
+    x_train = torch.stack(train_img)
+    y_train = torch.Tensor(train_lbl)
+    # # Placing the correct wrappers on the tensors
+    # x_train, y_train = Variable(x_train), Variable(y_train)
+
+    # Create a dataset for the training data, re-shuffles every epoch 
+    train_data = ImageDataset(train_img, train_lbl) 
+    train_loader = DataLoader(dataset=train_data,batch_size=1, shuffle=True)
+
+    # for each img/label in the batch
+    for i, data in enumerate(train_loader): 
+        #obtain the image and label
+        img, lbl = data
+
+        # zero the gradients
         optimizer.zero_grad()
 
-        # prediction for training and validation set
-        output_train = model(x_train)
+        # obtain the prediction using the model
+        predict = model(img)
 
-        # obtain 1D tensors
-        output_train = output_train[0]
+        # Removes the unnecessary dimensions on the label tensor 
+        lbl = torch.squeeze(lbl)
 
-        # obtain 1D labels
-        y_train = y_train[0]
-        y_train = y_train[0]
+        # Compute the loss
+        loss = criterion(predict[0], lbl)
+        loss.backward()
 
-
-        # computing the training and validation loss
-        loss_train = criterion(output_train, y_train)
-        
-        train_losses.append(loss_train)
-        # computing the updated weights of all the model parameters
-        loss_train.backward()
+        # Adjust the learning weights
         optimizer.step()
-        tr_loss = loss_train.item()
+
+        # Obtain the loss
+        tr_loss = loss.item()
+
+    print("Training loss is: " + str(tr_loss))
+
+
+
+
+
+
+    # # clearing the Gradients of the model parameters
+    # optimizer.zero_grad()
+    # # prediction for training and validation set
+    # output_train = model(x_train)
+    # # computing the training and validation loss
+    # loss_train = criterion(output_train, y_train)
+    # train_losses.append(loss_train)
+    # # computing the updated weights of all the model parameters
+    # loss_train.backward()
+    # optimizer.step()
+    # tr_loss = loss_train.item()
+
+
 
     
     # Seperate the evaluation from the training
@@ -222,6 +269,7 @@ train_losses = []
 val_losses = []
 # training the model
 
+# Complete the training process for each epoch.
 for epoch in range(n_epochs):
     print("Training in Epoch: " + str(epoch))
     train(epoch)
