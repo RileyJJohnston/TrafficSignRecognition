@@ -138,19 +138,18 @@ class NN(Module):
         self.cnn_layers = Sequential(
             # Defining a 2D convolution layer
             Conv2d(1, 4, kernel_size=3, stride=1, padding=1), #takes as args: in_channels, out_channels ....   -- if greyscale, in_channels is 1.  If RGB it is 3.  The out_channels equals the number of in_channels to the next Conv2D layer
-            #BatchNorm2d(4),
-            ReLU(inplace=True),
+            # BatchNorm2d(4),
+            # ReLU(inplace=True),
             MaxPool2d(kernel_size=2, stride=2),
             # Defining another 2D convolution layer
             Conv2d(4, 4, kernel_size=3, stride=1, padding=1),
-            #BatchNorm2d(4),
-            ReLU(inplace=True),
+            # BatchNorm2d(4),
+            # ReLU(inplace=True),
             MaxPool2d(kernel_size=2, stride=2),
         )
 
         self.linear_layers = Sequential(
-            # Linear(4*7*7, 42),  # flatten the output of the layers so that the second argument to the Linear function is the number of classes
-            Linear(4*7*7 , 42),
+             Linear(4*7*7 , 42),
             # ReLU(inplace=True),
             # Softmax(dim=1)
         )
@@ -234,6 +233,9 @@ def train(epoch):
         loss = criterion(predict, lbl)
         loss.backward()
 
+        # Adjust the learning weights
+        optimizer.step()
+
 
 # construct the model defined above
 model = NN()
@@ -258,22 +260,22 @@ for epoch in range(n_epochs):
 
 torch.save(model,'trafficRecognitionModel.pt')
 
+index = 1
 
-
-test_val1 = model(train_img[4])
-print(train_lbl[4])
+test_val1 = F.softmax(model(train_img[index]),1)
+print(train_lbl[index].item()+1)
 print(test_val1)
 
-test_val1 = model(train_img[5])
-print(train_lbl[5])
+test_val1 = F.softmax(model(train_img[index+1]),1)
+print(train_lbl[index+1].item()+1)
 print(test_val1)
 
-test_val1 = model(train_img[6])
-print(train_lbl[6])
+test_val1 = F.softmax(model(train_img[index+2]),1)
+print(train_lbl[index+2].item()+1)
 print(test_val1)
 
-test_val1 = model(train_img[6250])
-print(train_lbl[6250])
+test_val1 = F.softmax(model(train_img[index+3]),1)
+print(train_lbl[index+3].item()+1)
 print(test_val1)
 
 end = time.time()
