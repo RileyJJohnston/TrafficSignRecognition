@@ -20,6 +20,8 @@ import torchvision.transforms
 from torch.optim import Adam, SGD
 # import wrapper for tensors
 from torch.autograd import Variable
+# Softmax function
+import torch.nn.functional as F
 # import time to measure time taken by aspects of the program
 import time
 
@@ -34,19 +36,19 @@ class NN(Module):
             # Defining a 2D convolution layer
             Conv2d(1, 4, kernel_size=3, stride=1, padding=1), #takes as args: in_channels, out_channels ....   -- if greyscale, in_channels is 1.  If RGB it is 3.  The out_channels equals the number of in_channels to the next Conv2D layer
             #BatchNorm2d(4),
-            ReLU(inplace=True),
+            # ReLU(inplace=True),
             MaxPool2d(kernel_size=2, stride=2),
             # Defining another 2D convolution layer
             Conv2d(4, 4, kernel_size=3, stride=1, padding=1),
             #BatchNorm2d(4),
-            ReLU(inplace=True),
+            # ReLU(inplace=True),
             MaxPool2d(kernel_size=2, stride=2),
         )
 
         self.linear_layers = Sequential(
             Linear(4*7*7, 42),  # flatten the output of the layers so that the second argument to the Linear function is the number of classes
             # ReLU(inplace=True),
-            Softmax(dim=1)
+            # Softmax(dim=1)
         )
 
     # Forward pass
@@ -127,14 +129,12 @@ for dir in set_dir:
 # Create a train & validation split w/ 0.1 sent to validation
 train_img, val_img, train_lbl, val_lbl = train_test_split(train_img, train_lbl, test_size=0.1)
 
+index = 1 
 
-
-
-index = 15
-print(train_lbl[index])
-predict = model(train_img[index])
-print(predict)
-print(torch.argmax(predict))
+for index in range(1,10):
+    test_val1 = F.softmax(model(train_img[index]),1)
+    print(train_lbl[index].item()+1)
+    print(test_val1)
 
 
 

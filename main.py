@@ -20,6 +20,8 @@ from torch.nn import Linear, ReLU, CrossEntropyLoss, MSELoss, Sequential, Conv2d
 from torch.optim import SGD
 # function to generate the train and validation split
 from sklearn.model_selection import train_test_split
+# Functions used to summarize the structure of the nn
+from torchsummary import summary
 # used for image processing
 import torchvision.transforms
 # import optimizer and loss function
@@ -121,19 +123,6 @@ class NN(Module):
     def __init__(self):
         super(NN, self).__init__()
 
-        '''
-        # Defining the sequential layers for the NN
-        self.cnn_layers = Sequential(
-            # 2D Convolutional layer
-            Conv2d(1, 4, kernel_size=3, stride=1, padding=1),
-            ReLU(inplace=True),
-            MaxPool2d(kernel_size=2, stride=2),
-            # 2nd 2D Convolutonal Layer
-            Conv2d(4, 4, kernel_size=3, stride=1, padding=1),
-            ReLU(inplace=True),
-            MaxPool2d(kernel_size=2, stride=2),
-        )
-        '''
 
         self.cnn_layers = Sequential(
             # Defining a 2D convolution layer
@@ -146,10 +135,14 @@ class NN(Module):
             # BatchNorm2d(4),
             # ReLU(inplace=True),
             MaxPool2d(kernel_size=2, stride=2),
+            # Adding a another filter layer to the CNN
+            Conv2d(4,4, kernel_size = 3, stride =1, padding = 1),
+            # MaxPool2d(kernel_size=2, stride=2),
         )
 
         self.linear_layers = Sequential(
-             Linear(4*7*7 , 42),
+            # Linear(4*7*7 , 42),
+            Linear(4*7*7 , 42),
             # ReLU(inplace=True),
             # Softmax(dim=1)
         )
@@ -159,6 +152,7 @@ class NN(Module):
 
         # Place the CNN layers first
         x = self.cnn_layers(x)
+
         x = x.view(x.size(0), -1)
         # Flatten the output 
         x = x.view(1,-1)
@@ -172,12 +166,8 @@ class NN(Module):
 def train(epoch):
     model.train()
     tr_loss = 0
-
-    # # Formatting the training set into tensors
-    x_train = torch.stack(train_img)
-    y_train = torch.Tensor(train_lbl)
-    # # Placing the correct wrappers on the tensors
-    # x_train, y_train = Variable(x_train), Variable(y_train)
+    # counter used to count all the correct predictions
+    correct = 0 
 
     # Create a dataset for the training data, re-shuffles every epoch 
     train_data = ImageDataset(train_img, train_lbl) 
@@ -207,6 +197,10 @@ def train(epoch):
         # Obtain the loss
         tr_loss = loss.item()
 
+        # Verify if the prediction is prediction is correct and update the counter
+        if lbl == torch.argmax(F.softmax(predict,1)): 
+            correct += 1 # increment the count 
+
     print("Training loss is: " + str(tr_loss))
     
     # Seperate the evaluation from the training
@@ -235,10 +229,20 @@ def train(epoch):
 
         # Adjust the learning weights
         optimizer.step()
+    
+        # Count the amount of correct predictions
+        if lbl == torch.argmax(F.softmax(predict,1)): 
+            correct += 1 # increment the count 
 
+    # Obtain the final percentage of correct predictions 
+    print("Correct Predictions: " + str(round(correct/(eval_loader.__len__() + train_loader.__len__())*100,2)) + " %")
 
 # construct the model defined above
 model = NN()
+
+# obtain a summary of the model dimensions -> currently an issue wiht the dimension used by the function
+# summ =summary(model, (1,28,28))
+
 # define the optimizer
 optimizer = Adam(model.parameters(), lr=0.07)
 # define the loss function
@@ -246,7 +250,7 @@ criterion = CrossEntropyLoss()
 
 
 # defining the number of epochs
-n_epochs = 1
+n_epochs = 10
 # empty list to store training losses
 train_losses = []
 # empty list to store validation losses
@@ -258,25 +262,24 @@ for epoch in range(n_epochs):
     print("Training in Epoch: " + str(epoch))
     train(epoch)
 
+# Calculate the final training time for the network
+end = time.time()
+print("Total time: "  + str(round(end-start,2)) + " s")
+
+# Save the model to a file
 torch.save(model,'trafficRecognitionModel.pt')
 
-index = 1
 
-test_val1 = F.softmax(model(train_img[index]),1)
-print(train_lbl[index].item()+1)
-print(test_val1)
+# # Test a set amount of training images
+# index = 1 
+# for index in range(1,10):
+#     test_val1 = F.softmax(model(train_img[index]),1)
+#     print(train_lbl[index].item()+1)
+#     print(test_val1)
+#     print(torch.argmax(test_val1))
 
-test_val1 = F.softmax(model(train_img[index+1]),1)
-print(train_lbl[index+1].item()+1)
-print(test_val1)
 
-test_val1 = F.softmax(model(train_img[index+2]),1)
-print(train_lbl[index+2].item()+1)
-print(test_val1)
 
-test_val1 = F.softmax(model(train_img[index+3]),1)
-print(train_lbl[index+3].item()+1)
-print(test_val1)
 
-end = time.time()
-print("Total time:"  + str(end-start))
+
+
