@@ -15,7 +15,7 @@ import torch
 from torch.utils.data import Dataset, DataLoader
 
 # import the building blocks for the neural nets
-from torch.nn import Linear, ReLU, CrossEntropyLoss, MSELoss, Sequential, Conv2d, MaxPool2d, Module, Softmax, BatchNorm2d
+from torch.nn import Linear, ReLU, CrossEntropyLoss, LeakyReLU, Sequential, Conv2d, MaxPool2d, Module, Softmax, BatchNorm2d
 # import the optimizer function
 from torch.optim import SGD
 # function to generate the train and validation split
@@ -70,7 +70,7 @@ for dir in set_dir:
             width, height = img.size
 
             # Convert the image to grayscale
-            img = ImageOps.grayscale(img)
+            # img = ImageOps.grayscale(img)
             #img.show()
 
             img = fn.resize(img, size=28)
@@ -126,18 +126,21 @@ class NN(Module):
 
         self.cnn_layers = Sequential(
             # Defining a 2D convolution layer
-            Conv2d(1, 4, kernel_size=3, stride=1, padding=1), #takes as args: in_channels, out_channels ....   -- if greyscale, in_channels is 1.  If RGB it is 3.  The out_channels equals the number of in_channels to the next Conv2D layer
-            # BatchNorm2d(4),
-            # ReLU(inplace=True),
+            Conv2d(3, 4, kernel_size=3, stride=1, padding=1), #takes as args: in_channels, out_channels ....   -- if greyscale, in_channels is 1.  If RGB it is 3.  The out_channels equals the number of in_channels to the next Conv2D layer
+
+            LeakyReLU(0.5,inplace=True),
+
             MaxPool2d(kernel_size=2, stride=2),
             # Defining another 2D convolution layer
             Conv2d(4, 4, kernel_size=3, stride=1, padding=1),
-            # BatchNorm2d(4),
-            # ReLU(inplace=True),
-            MaxPool2d(kernel_size=2, stride=2),
+            LeakyReLU(0.5,inplace=True),
+
             # Adding a another filter layer to the CNN
             Conv2d(4,4, kernel_size = 3, stride =1, padding = 1),
-            # MaxPool2d(kernel_size=2, stride=2),
+            MaxPool2d(kernel_size=2, stride=2),
+
+            # LeakyReLU(0,inplace=True),
+            
         )
 
         self.linear_layers = Sequential(
@@ -244,7 +247,7 @@ model = NN()
 # summ =summary(model, (1,28,28))
 
 # define the optimizer
-optimizer = Adam(model.parameters(), lr=0.07)
+optimizer = Adam(model.parameters(), lr=0.1)
 # define the loss function
 criterion = CrossEntropyLoss()
 
