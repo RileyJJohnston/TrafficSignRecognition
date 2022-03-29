@@ -70,7 +70,7 @@ for dir in set_dir:
             width, height = img.size
 
             # Convert the image to grayscale
-            img = ImageOps.grayscale(img)
+            #img = ImageOps.grayscale(img)
             #img.show()
 
             img = fn.resize(img, size=28)
@@ -126,7 +126,7 @@ class NN(Module):
 
         self.cnn_layers = Sequential(
             # Defining a 2D convolution layer
-            Conv2d(1, 4, kernel_size=3, stride=1, padding=1), #takes as args: in_channels, out_channels ....   -- if greyscale, in_channels is 1.  If RGB it is 3.  The out_channels equals the number of in_channels to the next Conv2D layer
+            Conv2d(3, 4, kernel_size=3, stride=1, padding=1), #takes as args: in_channels, out_channels ....   -- if greyscale, in_channels is 1.  If RGB it is 3.  The out_channels equals the number of in_channels to the next Conv2D layer
             # BatchNorm2d(4),
             # ReLU(inplace=True),
             MaxPool2d(kernel_size=2, stride=2),
@@ -197,6 +197,8 @@ def train(epoch):
         # Obtain the loss
         tr_loss = loss.item()
 
+        #print(torch.argmax(F.softmax(predict,1)))
+        
         # Verify if the prediction is prediction is correct and update the counter
         if lbl == torch.argmax(F.softmax(predict,1)): 
             correct += 1 # increment the count 
