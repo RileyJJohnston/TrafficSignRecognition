@@ -171,74 +171,50 @@ def train(epoch):
     tr_loss = 0
     # counter used to count all the correct predictions
     correct = 0 
-
-    # Create a dataset for the training data, re-shuffles every epoch 
-    train_data = ImageDataset(train_img, train_lbl) 
-    train_loader = DataLoader(dataset=train_data,batch_size=1, shuffle=True)
-
-    # for each img/label in the batch
-    for i, data in enumerate(train_loader): 
-        #obtain the image and label
-        img, lbl = data
-        
-        #!!!!! NEED to change this if larger batches are going to be used
-        lbl = torch.reshape(lbl, [1])
-
-        # zero the gradients
-        optimizer.zero_grad()
-
-        # obtain the prediction using the model
-        predict = model(img)
-  
-        # Compute the loss
-        loss = criterion(predict, lbl)
-        loss.backward()
-
-        # Adjust the learning weights
-        optimizer.step()
-
-        # Obtain the loss
-        tr_loss = loss.item()
-
-        # Verify if the prediction is prediction is correct and update the counter
-        if lbl == torch.argmax(F.softmax(predict,1)): 
-            correct += 1 # increment the count 
-
-    print("Training loss is: " + str(tr_loss))
     
-    # Seperate the evaluation from the training
-    # Run the evaluation portion of the dataset through the neural network
-    model.eval()
-    # Create a dataset for the validation data, re-shuffles every epoch 
-    eval_data = ImageDataset(val_img, val_lbl) 
-    eval_loader = DataLoader(dataset=eval_data,batch_size=1, shuffle=True)
+    # cycle through the datasets and loaders
+    i = 1
+    for i in range(1,3):
+        if i == 1: 
+            data_set = ImageDataset(train_img, train_lbl)         
+            data_loader = DataLoader(dataset=data_set,batch_size=1, shuffle=True)
+            train_set_size = data_loader.__len__() # get the size of the dataset
+        else: 
+            data_set =  ImageDataset(val_img, val_lbl) 
+            data_loader = DataLoader(dataset=data_set,batch_size=1, shuffle=True)
+            eval_set_size = data_loader.__len__() # get the size of the dataset
 
-    # for each img/label in the batch
-    for i, data in enumerate(eval_loader): 
-        #obtain the image and label
-        img, lbl = data
 
-        lbl = torch.reshape(lbl, [1])
-        
-        # zero the gradients
-        optimizer.zero_grad()
+                # for each img/label in the batch
+        for i, data in enumerate(data_loader): 
+            #obtain the image and label
+            img, lbl = data
+            
+            #!!!!! NEED to change this if larger batches are going to be used
+            lbl = torch.reshape(lbl, [1])
 
-        # obtain the prediction using the model
-        predict = model(img)
+            # zero the gradients
+            optimizer.zero_grad()
 
-        # Compute the loss
-        loss = criterion(predict, lbl)
-        loss.backward()
-
-        # Adjust the learning weights
-        optimizer.step()
+            # obtain the prediction using the model
+            predict = model(img)
     
-        # Count the amount of correct predictions
-        if lbl == torch.argmax(F.softmax(predict,1)): 
-            correct += 1 # increment the count 
+            # Compute the loss
+            loss = criterion(predict, lbl)
+            loss.backward()
+
+            # Adjust the learning weights
+            optimizer.step()
+
+            # Obtain the loss
+            tr_loss = loss.item()
+
+            # Verify if the prediction is prediction is correct and update the counter
+            if lbl == torch.argmax(F.softmax(predict,1)): 
+                correct += 1 # increment the count 
 
     # Obtain the final percentage of correct predictions 
-    print("Correct Predictions: " + str(round(correct/(eval_loader.__len__() + train_loader.__len__())*100,2)) + " %")
+    print("Correct Predictions: " + str(round(correct/(eval_set_size + train_set_size)*100,2)) + " %")
 
 # construct the model defined above
 model = NN()
@@ -248,6 +224,7 @@ model = NN()
 
 # define the optimizer
 optimizer = Adam(model.parameters(), lr=0.1)
+# optimizer = SGD(model.parameters(), lr=0.1, momentum=0.9) # Fix this later
 # define the loss function
 criterion = CrossEntropyLoss()
 
