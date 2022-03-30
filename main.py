@@ -39,7 +39,7 @@ import torchvision.transforms.functional as fn
 start = time.time()
 
 #Set the batch size for the training
-BATCH_SIZE = 20
+BATCH_SIZE = 100
 
 # ------ Retrieve all the Training Images -------#
 train_img = []
@@ -76,8 +76,8 @@ for dir in set_dir:
             # img = ImageOps.grayscale(img)
             #img.show()
 
-            img = fn.resize(img, size=28)
-            img = fn.center_crop(img, output_size=[28])
+            img = fn.resize(img, size=50)
+            img = fn.center_crop(img, output_size=[50])
 
             # Configure the conversion to tensor
             transform = torchvision.transforms.Compose([
@@ -144,7 +144,7 @@ class NN(Module):
         )
 
         self.linear_layers = Sequential(
-            Linear(4*7*7 , 42),
+            Linear(576 , 42),
         )
 
     # Forward pass
@@ -201,15 +201,15 @@ def train(epoch):
             # Obtain the loss
             tr_loss = loss.item()
 
-            i = 0
-            for lb in lbl:
+            for i, lb in enumerate(lbl):
                 # Verify if the prediction s prediction is correct and update the counter
-                if lb == torch.argmax(F.softmax(predict[i], dim=0)): 
+                if lb.item() == torch.argmax(F.softmax(predict[i], dim=0)): 
                     correct += 1 # increment the count 
-                i += 1
+                
+        
 
     # Obtain the final percentage of correct predictions 
-    print("Correct Predictions: " + str(round(correct/(eval_set_size + train_set_size)*100,2)) + " %")
+    print("Correct Predictions: " + str(round(correct/BATCH_SIZE/(eval_set_size + train_set_size)*100,2)) + " %")
 
 # construct the model defined above
 model = NN()
@@ -218,7 +218,7 @@ model = NN()
 # summ =summary(model, (1,28,28))
 
 # define the optimizer
-optimizer = Adam(model.parameters(), lr=0.1)
+optimizer = Adam(model.parameters(), lr=0.03)
 # optimizer = SGD(model.parameters(), lr=0.1, momentum=0.9) # Fix this later
 # define the loss function
 criterion = CrossEntropyLoss()
@@ -249,13 +249,19 @@ torch.save(model,'trafficRecognitionModel.pt')
 
 
 
-# # Test a set amount of training images
-# index = 1 
-# for index in range(1,10):
-#     test_val1 = F.softmax(model(train_img[index]),1)
-#     print(train_lbl[index].item()+1)
-#     print(test_val1)
-#     print(torch.argmax(test_val1))
+
+# #Test a set amount of training images
+# data_set = ImageDataset(train_img, train_lbl)         
+# data_loader = DataLoader(dataset=data_set,batch_size=100, shuffle=True)
+# for i, data in enumerate(data_loader): 
+#     img, lbl = data
+#     lbl = torch.reshape(lbl, [len(lbl)])
+#     predict = model(img)
+#     print("Label:" + str(lbl[i]))
+#     print("Predicted Label" + str(torch.argmax(F.softmax(predict[i],0))))
+
+#     if i == 10: 
+#         break
 
 
 
