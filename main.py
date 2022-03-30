@@ -15,13 +15,13 @@ import torch
 from torch.utils.data import Dataset, DataLoader
 
 # import the building blocks for the neural nets
-from torch.nn import Linear, ReLU, CrossEntropyLoss, MSELoss, Sequential, Conv2d, MaxPool2d, Module, Softmax, BatchNorm2d
+from torch.nn import Linear, ReLU, CrossEntropyLoss, LeakyReLU, Sequential, Conv2d, MaxPool2d, Module, Softmax, BatchNorm2d
 # import the optimizer function
 from torch.optim import SGD
 # function to generate the train and validation split
 from sklearn.model_selection import train_test_split
 # Functions used to summarize the structure of the nn
-from torchinfo import summary
+from torchsummary import summary
 # used for image processing
 import torchvision.transforms
 # import optimizer and loss function
@@ -39,7 +39,7 @@ import torchvision.transforms.functional as fn
 start = time.time()
 
 #Set the batch size for the training
-BATCH_SIZE = 2
+BATCH_SIZE = 20
 
 # ------ Retrieve all the Training Images -------#
 train_img = []
@@ -73,8 +73,9 @@ for dir in set_dir:
             width, height = img.size
 
             # Convert the image to grayscale
-            #img = ImageOps.grayscale(img)
+            # img = ImageOps.grayscale(img)
             #img.show()
+
             img = fn.resize(img, size=28)
             img = fn.center_crop(img, output_size=[28])
 
@@ -86,13 +87,17 @@ for dir in set_dir:
 
             # apply the transform
             tensor_img = transform(img)
+
             #tensor_img = tensor_img.view(1, -1)
             # Add the new tensor to the list
             train_img.append(tensor_img)
             # label is stored in directory index   
+
             train_lbl.append(torch.tensor([[int(str(dir_name))]]))#).view(1, -1))
             # Close the file
             img.close()
+
+
 
 
 # Create a train & validation split w/ 0.1 sent to validation
@@ -125,45 +130,31 @@ class NN(Module):
         self.cnn_layers = Sequential(
             # Defining a 2D convolution layer
             Conv2d(3, 4, kernel_size=3, stride=1, padding=1), #takes as args: in_channels, out_channels ....   -- if greyscale, in_channels is 1.  If RGB it is 3.  The out_channels equals the number of in_channels to the next Conv2D layer
-            BatchNorm2d(4),
-            # ReLU(inplace=True),
             MaxPool2d(kernel_size=2, stride=2),
-            # Defining another 2D convolution layer
+            # LeakyReLU(1,inplace=True),
+
             Conv2d(4, 4, kernel_size=3, stride=1, padding=1),
-            # BatchNorm2d(4),
-            # ReLU(inplace=True),
+            Conv2d(4, 4, kernel_size=3, stride=1, padding=1),
             MaxPool2d(kernel_size=2, stride=2),
-            # Adding a another filter layer to the CNN
-            Conv2d(4,4, kernel_size = 3, stride =1, padding = 1),
-            # MaxPool2d(kernel_size=2, stride=2),
+            # LeakyReLU(1,inplace=True),
+
+            # output fo the CNN layer
+            # LeakyReLU(0.2,inplace=True),
+            
         )
 
         self.linear_layers = Sequential(
-            # Linear(4*7*7 , 42),
             Linear(4*7*7 , 42),
-            # ReLU(inplace=True),
-            # Softmax(dim=1)
         )
 
     # Forward pass
     def forward(self, x):
-        #print("input to conv layers")
-        #print(x.size())
-        # Place the CNN layers first
-        #print(x.size())
-        print(x.size())
-        x = self.cnn_layers(x)
 
-        x = x.view(x.size(0), -1)
-        # Flatten the output 
-        x = x.view(1,-1)
-        #x = torch.unsqueeze(x,0)      
-        #print("output of conv layers")
-        #print(x.size())
+        # Place the CNN layers first
+        x = self.cnn_layers(x)
+        # Flatten the output based on batch size
+        x = x.view(x.size(0), -1)        
         x = self.linear_layers(x)
-        #print(x.size())
-        # generate a softmax output for the final layer     
-        # x = F.softmax(x,1)
         return x
 
 # Define the training function for the NN 
@@ -172,90 +163,63 @@ def train(epoch):
     tr_loss = 0
     # counter used to count all the correct predictions
     correct = 0 
-
-    # Create a dataset for the training data, re-shuffles every epoch 
-    train_data = ImageDataset(train_img, train_lbl) 
-    train_loader = DataLoader(dataset=train_data,batch_size=BATCH_SIZE, shuffle=True)
-
-    # for each img/label in the batch
-    for i, data in enumerate(train_loader): 
-        #obtain the image and label
-        img, lbl = data
-        
-        #!!!!! NEED to change this if larger batches are going to be used
-        lbl = torch.reshape(lbl, [BATCH_SIZE])
-        print("sizes")
-        print(img.size())
-        print(lbl.size())
-
-        # zero the gradients
-        optimizer.zero_grad()
-
-        # obtain the prediction using the model
-        predict = model(img)
-  
-        # Compute the loss
-        loss = criterion(predict, lbl)
-        loss.backward()
-
-        # Adjust the learning weights
-        optimizer.step()
-
-        # Obtain the loss
-        tr_loss = loss.item()
-
-        #print(torch.argmax(F.softmax(predict,1)))
-        
-        # Verify if the prediction is prediction is correct and update the counter
-        if lbl == torch.argmax(F.softmax(predict,1)): 
-            correct += 1 # increment the count 
-
-    print("Training loss is: " + str(tr_loss))
     
-    # Seperate the evaluation from the training
-    # Run the evaluation portion of the dataset through the neural network
-    model.eval()
-    # Create a dataset for the validation data, re-shuffles every epoch 
-    eval_data = ImageDataset(val_img, val_lbl) 
-    eval_loader = DataLoader(dataset=eval_data,batch_size=2, shuffle=True)
+    # cycle through the datasets and loaders
+    i = 1
+    for i in range(1,3):
+        if i == 1: 
+            data_set = ImageDataset(train_img, train_lbl)         
+            data_loader = DataLoader(dataset=data_set,batch_size=BATCH_SIZE, shuffle=True)
+            train_set_size = data_loader.__len__() # get the size of the dataset
+        else: 
+            data_set =  ImageDataset(val_img, val_lbl) 
+            data_loader = DataLoader(dataset=data_set,batch_size=BATCH_SIZE, shuffle=True)
+            eval_set_size = data_loader.__len__() # get the size of the dataset
 
-    # for each img/label in the batch
-    for i, data in enumerate(eval_loader): 
-        #obtain the image and label
-        img, lbl = data
-        print("test")
-        print(lbl.size())
-        lbl = torch.reshape(lbl, [1])
-        print(lbl.size())
-        # zero the gradients
-        optimizer.zero_grad()
 
-        # obtain the prediction using the model
-        predict = model(img)
+                # for each img/label in the batch
+        for i, data in enumerate(data_loader): 
+            #obtain the image and label
+            img, lbl = data
+            
+            #Set of labels depends on the batch size used
+            lbl = torch.reshape(lbl, [len(lbl)])
 
-        # Compute the loss
-        loss = criterion(predict, lbl)
-        loss.backward()
+            # zero the gradients
+            optimizer.zero_grad()
 
-        # Adjust the learning weights
-        optimizer.step()
+            # obtain the prediction using the model
+            predict = model(img)
     
-        # Count the amount of correct predictions
-        if lbl == torch.argmax(F.softmax(predict,1)): 
-            correct += 1 # increment the count 
+            # Compute the loss
+            loss = criterion(predict, lbl)
+            loss.backward()
+
+            # Adjust the learning weights
+            optimizer.step()
+
+            # Obtain the loss
+            tr_loss = loss.item()
+
+            i = 0
+            for lb in lbl:
+                # Verify if the prediction s prediction is correct and update the counter
+                if lb == torch.argmax(F.softmax(predict[i], dim=0)): 
+                    correct += 1 # increment the count 
+                i += 1
 
     # Obtain the final percentage of correct predictions 
-    print("Correct Predictions: " + str(round(correct/(eval_loader.__len__() + train_loader.__len__())*100,2)) + " %")
+    print("Correct Predictions: " + str(round(correct/(eval_set_size + train_set_size)*100,2)) + " %")
 
 # construct the model defined above
 model = NN()
 
 # obtain a summary of the model dimensions -> currently an issue wiht the dimension used by the function
-summ = summary(model, input_size=(1,3,28,28))
-print(summ)
+# summ =summary(model, (1,28,28))
 
 # define the optimizer
-optimizer = Adam(model.parameters(), lr=0.07)
+optimizer = Adam(model.parameters(), lr=0.1)
+# optimizer = SGD(model.parameters(), lr=0.1, momentum=0.9) # Fix this later
 # define the loss function
 criterion = CrossEntropyLoss()
 
@@ -279,6 +243,10 @@ print("Total time: "  + str(round(end-start,2)) + " s")
 
 # Save the model to a file
 torch.save(model,'trafficRecognitionModel.pt')
+
+# summ = summary(model, input_size=(1,3,28,28))
+# print(summ)
+
 
 
 # # Test a set amount of training images
