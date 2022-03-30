@@ -39,7 +39,7 @@ import torchvision.transforms.functional as fn
 start = time.time()
 
 #Set the batch size for the training
-BATCH_SIZE = 100
+BATCH_SIZE = 20
 
 # ------ Retrieve all the Training Images -------#
 train_img = []
@@ -183,7 +183,7 @@ def train(epoch):
             img, lbl = data
             
             #Set of labels depends on the batch size used
-            lbl = torch.reshape(lbl, [BATCH_SIZE])
+            lbl = torch.reshape(lbl, [len(lbl)])
 
             # zero the gradients
             optimizer.zero_grad()
