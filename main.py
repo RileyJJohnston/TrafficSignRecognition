@@ -21,7 +21,7 @@ from torch.optim import SGD
 # function to generate the train and validation split
 from sklearn.model_selection import train_test_split
 # Functions used to summarize the structure of the nn
-from torchsummary import summary
+from torchinfo import summary
 # used for image processing
 import torchvision.transforms
 # import optimizer and loss function
@@ -37,6 +37,9 @@ from skimage.io import imread
 import torchvision.transforms.functional as fn
 
 start = time.time()
+
+#Set the batch size for the training
+BATCH_SIZE = 2
 
 # ------ Retrieve all the Training Images -------#
 train_img = []
@@ -72,7 +75,6 @@ for dir in set_dir:
             # Convert the image to grayscale
             #img = ImageOps.grayscale(img)
             #img.show()
-
             img = fn.resize(img, size=28)
             img = fn.center_crop(img, output_size=[28])
 
@@ -84,17 +86,13 @@ for dir in set_dir:
 
             # apply the transform
             tensor_img = transform(img)
-
             #tensor_img = tensor_img.view(1, -1)
             # Add the new tensor to the list
             train_img.append(tensor_img)
             # label is stored in directory index   
-
             train_lbl.append(torch.tensor([[int(str(dir_name))]]))#).view(1, -1))
             # Close the file
             img.close()
-
-
 
 
 # Create a train & validation split w/ 0.1 sent to validation
@@ -127,7 +125,7 @@ class NN(Module):
         self.cnn_layers = Sequential(
             # Defining a 2D convolution layer
             Conv2d(3, 4, kernel_size=3, stride=1, padding=1), #takes as args: in_channels, out_channels ....   -- if greyscale, in_channels is 1.  If RGB it is 3.  The out_channels equals the number of in_channels to the next Conv2D layer
-            # BatchNorm2d(4),
+            BatchNorm2d(4),
             # ReLU(inplace=True),
             MaxPool2d(kernel_size=2, stride=2),
             # Defining another 2D convolution layer
@@ -149,15 +147,21 @@ class NN(Module):
 
     # Forward pass
     def forward(self, x):
-
+        #print("input to conv layers")
+        #print(x.size())
         # Place the CNN layers first
+        #print(x.size())
+        print(x.size())
         x = self.cnn_layers(x)
 
         x = x.view(x.size(0), -1)
         # Flatten the output 
         x = x.view(1,-1)
         #x = torch.unsqueeze(x,0)      
+        #print("output of conv layers")
+        #print(x.size())
         x = self.linear_layers(x)
+        #print(x.size())
         # generate a softmax output for the final layer     
         # x = F.softmax(x,1)
         return x
@@ -171,7 +175,7 @@ def train(epoch):
 
     # Create a dataset for the training data, re-shuffles every epoch 
     train_data = ImageDataset(train_img, train_lbl) 
-    train_loader = DataLoader(dataset=train_data,batch_size=1, shuffle=True)
+    train_loader = DataLoader(dataset=train_data,batch_size=BATCH_SIZE, shuffle=True)
 
     # for each img/label in the batch
     for i, data in enumerate(train_loader): 
@@ -179,7 +183,10 @@ def train(epoch):
         img, lbl = data
         
         #!!!!! NEED to change this if larger batches are going to be used
-        lbl = torch.reshape(lbl, [1])
+        lbl = torch.reshape(lbl, [BATCH_SIZE])
+        print("sizes")
+        print(img.size())
+        print(lbl.size())
 
         # zero the gradients
         optimizer.zero_grad()
@@ -210,15 +217,16 @@ def train(epoch):
     model.eval()
     # Create a dataset for the validation data, re-shuffles every epoch 
     eval_data = ImageDataset(val_img, val_lbl) 
-    eval_loader = DataLoader(dataset=eval_data,batch_size=1, shuffle=True)
+    eval_loader = DataLoader(dataset=eval_data,batch_size=2, shuffle=True)
 
     # for each img/label in the batch
     for i, data in enumerate(eval_loader): 
         #obtain the image and label
         img, lbl = data
-
+        print("test")
+        print(lbl.size())
         lbl = torch.reshape(lbl, [1])
-        
+        print(lbl.size())
         # zero the gradients
         optimizer.zero_grad()
 
@@ -243,7 +251,8 @@ def train(epoch):
 model = NN()
 
 # obtain a summary of the model dimensions -> currently an issue wiht the dimension used by the function
-# summ =summary(model, (1,28,28))
+summ = summary(model, input_size=(1,3,28,28))
+print(summ)
 
 # define the optimizer
 optimizer = Adam(model.parameters(), lr=0.07)
