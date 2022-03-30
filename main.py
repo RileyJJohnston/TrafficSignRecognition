@@ -38,6 +38,9 @@ import torchvision.transforms.functional as fn
 
 start = time.time()
 
+#Set the batch size for the training
+BATCH_SIZE = 100
+
 # ------ Retrieve all the Training Images -------#
 train_img = []
 train_lbl = []
@@ -127,27 +130,21 @@ class NN(Module):
         self.cnn_layers = Sequential(
             # Defining a 2D convolution layer
             Conv2d(3, 4, kernel_size=3, stride=1, padding=1), #takes as args: in_channels, out_channels ....   -- if greyscale, in_channels is 1.  If RGB it is 3.  The out_channels equals the number of in_channels to the next Conv2D layer
-
-            LeakyReLU(0.5,inplace=True),
-
             MaxPool2d(kernel_size=2, stride=2),
-            # Defining another 2D convolution layer
+            # LeakyReLU(1,inplace=True),
+
             Conv2d(4, 4, kernel_size=3, stride=1, padding=1),
-            LeakyReLU(0.5,inplace=True),
-
-            # Adding a another filter layer to the CNN
-            Conv2d(4,4, kernel_size = 3, stride =1, padding = 1),
+            Conv2d(4, 4, kernel_size=3, stride=1, padding=1),
             MaxPool2d(kernel_size=2, stride=2),
+            # LeakyReLU(1,inplace=True),
 
-            # LeakyReLU(0,inplace=True),
+            # output fo the CNN layer
+            # LeakyReLU(0.2,inplace=True),
             
         )
 
         self.linear_layers = Sequential(
-            # Linear(4*7*7 , 42),
             Linear(4*7*7 , 42),
-            # ReLU(inplace=True),
-            # Softmax(dim=1)
         )
 
     # Forward pass
@@ -155,14 +152,9 @@ class NN(Module):
 
         # Place the CNN layers first
         x = self.cnn_layers(x)
-
-        x = x.view(x.size(0), -1)
-        # Flatten the output 
-        x = x.view(1,-1)
-        #x = torch.unsqueeze(x,0)      
+        # Flatten the output based on batch size
+        x = x.view(x.size(0), -1)        
         x = self.linear_layers(x)
-        # generate a softmax output for the final layer     
-        # x = F.softmax(x,1)
         return x
 
 # Define the training function for the NN 
@@ -177,11 +169,11 @@ def train(epoch):
     for i in range(1,3):
         if i == 1: 
             data_set = ImageDataset(train_img, train_lbl)         
-            data_loader = DataLoader(dataset=data_set,batch_size=1, shuffle=True)
+            data_loader = DataLoader(dataset=data_set,batch_size=BATCH_SIZE, shuffle=True)
             train_set_size = data_loader.__len__() # get the size of the dataset
         else: 
             data_set =  ImageDataset(val_img, val_lbl) 
-            data_loader = DataLoader(dataset=data_set,batch_size=1, shuffle=True)
+            data_loader = DataLoader(dataset=data_set,batch_size=BATCH_SIZE, shuffle=True)
             eval_set_size = data_loader.__len__() # get the size of the dataset
 
 
@@ -190,8 +182,8 @@ def train(epoch):
             #obtain the image and label
             img, lbl = data
             
-            #!!!!! NEED to change this if larger batches are going to be used
-            lbl = torch.reshape(lbl, [1])
+            #Set of labels depends on the batch size used
+            lbl = torch.reshape(lbl, [BATCH_SIZE])
 
             # zero the gradients
             optimizer.zero_grad()
@@ -209,9 +201,12 @@ def train(epoch):
             # Obtain the loss
             tr_loss = loss.item()
 
-            # Verify if the prediction is prediction is correct and update the counter
-            if lbl == torch.argmax(F.softmax(predict,1)): 
-                correct += 1 # increment the count 
+            i = 0
+            for lb in lbl:
+                # Verify if the prediction s prediction is correct and update the counter
+                if lb == torch.argmax(F.softmax(predict[i], dim=0)): 
+                    correct += 1 # increment the count 
+                i += 1
 
     # Obtain the final percentage of correct predictions 
     print("Correct Predictions: " + str(round(correct/(eval_set_size + train_set_size)*100,2)) + " %")
@@ -248,6 +243,10 @@ print("Total time: "  + str(round(end-start,2)) + " s")
 
 # Save the model to a file
 torch.save(model,'trafficRecognitionModel.pt')
+
+# summ = summary(model, input_size=(1,3,28,28))
+# print(summ)
+
 
 
 # # Test a set amount of training images
