@@ -214,9 +214,10 @@ def train(epoch):
 
 # construct the model defined above
 model = NN()
+# obtain the summary information about the model 
+summ = summary(model, input_size=(3,50,50))
+print(summ)
 
-# obtain a summary of the model dimensions -> currently an issue wiht the dimension used by the function
-# summ =summary(model, (1,28,28))
 
 # define the optimizer
 optimizer = Adam(model.parameters(), lr=0.03)
@@ -231,7 +232,7 @@ n_epochs = 10
 train_losses = []
 # empty list to store validation losses
 val_losses = []
-# training the model
+# training the model    
 
 # Complete the training process for each epoch.
 for epoch in range(n_epochs):
@@ -245,8 +246,7 @@ print("Total time: "  + str(round(end-start,2)) + " s")
 # Save the model to a file
 torch.save(model,'trafficRecognitionModel.pt')
 
-# summ = summary(model, input_size=(1,3,28,28))
-# print(summ)
+
 
 # # Visually Test a set amount of training images
 # data_set = ImageDataset(train_img, train_lbl)         
