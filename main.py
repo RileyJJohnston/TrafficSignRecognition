@@ -101,7 +101,8 @@ for dir in set_dir:
 
 
 # Create a train & validation split w/ 0.1 sent to validation
-train_img, val_img, train_lbl, val_lbl = train_test_split(train_img, train_lbl, test_size=0.1)
+train_img, val_img, train_lbl, val_lbl = train_test_split(train_img, train_lbl, test_size=0.2)
+val_img, test_img, val_lbl, test_lbl = train_test_split(val_img, val_lbl, test_size=0.5)
 
 # Dataset class used to handle the images used in training
 class ImageDataset(Dataset):
