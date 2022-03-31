@@ -248,10 +248,7 @@ torch.save(model,'trafficRecognitionModel.pt')
 # summ = summary(model, input_size=(1,3,28,28))
 # print(summ)
 
-
-
-
-# #Test a set amount of training images
+# # Visually Test a set amount of training images
 # data_set = ImageDataset(train_img, train_lbl)         
 # data_loader = DataLoader(dataset=data_set,batch_size=100, shuffle=True)
 # for i, data in enumerate(data_loader): 
@@ -263,6 +260,45 @@ torch.save(model,'trafficRecognitionModel.pt')
 
 #     if i == 10: 
 #         break
+
+
+
+
+## ------------- Test the dataset -------------- ##
+correct = 0
+# Create a dataloader for the testing dataset
+data_set = ImageDataset(test_img, test_lbl)         
+data_loader = DataLoader(dataset=data_set,batch_size=1, shuffle=True)
+# For all the images in the testing set
+for i, data in enumerate(data_loader): 
+    # obtain the data from the loader
+    img, lbl = data
+    # re-format the label 
+    lbl = torch.reshape(lbl, [len(lbl)])
+    # obtain the predicted value
+    predict = torch.argmax(F.softmax(model(img),1))
+
+    # Compare the label 
+    if lbl == predict: 
+        correct += 1
+
+print("-------------------------------")
+print("Test Percentage Correct: " +  str(round(correct/data_loader.__len__()*100,2)) + "%")
+print("-------------------------------")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
