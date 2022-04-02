@@ -12,8 +12,8 @@ import torch
 from torch.nn import Linear, ReLU, CrossEntropyLoss, MSELoss, Sequential, Conv2d, MaxPool2d, Module, Softmax, BatchNorm2d
 # import the optimizer function
 from torch.optim import SGD
-# function to generate the train and validation split
-from sklearn.model_selection import train_test_split
+
+from sklearn.metrics import confusion_matrix
 # used for image processing
 import torchvision.transforms
 # import optimizer and loss function
@@ -27,6 +27,9 @@ import time
 
 from skimage.io import imread
 import torchvision.transforms.functional as fn
+
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 class NN(Module):
     def __init__(self):
@@ -67,11 +70,13 @@ model.eval()
 
 
 
-# ------ Retrieve all the Training Images -------#
-train_img = []
-train_lbl = []
+# ------ Retrieve all the testing Images -------#
+test_img = []
+test_lbl = []
+test_img_int = []
+test_lbl_int = []
 
-# Path containing the training images
+# Path containing the testing images
 path = 'data\GTSRB\Test'
 # Obtain the set of directories
 set_dir = os.scandir(path)
@@ -80,6 +85,8 @@ set_dir = os.scandir(path)
 for dir in set_dir:
     if (str(dir) == '<DirEntry \'00042\'>'):
         continue # dont use this folder for now
+    #if (str(dir) == '<DirEntry \'00004\'>'):
+    #    break # dont use this folder for now
 
     #obtain the name of the directory
     dir_name = dir.name
@@ -118,22 +125,18 @@ for dir in set_dir:
 
             #tensor_img = tensor_img.view(1, -1)
             # Add the new tensor to the list
-            train_img.append(tensor_img)
+            test_img.append(tensor_img)
             # label is stored in directory index   
 
-            train_lbl.append(torch.tensor([[int(str(dir_name))]]))#).view(1, -1))
+            test_lbl.append(torch.tensor([[int(str(dir_name))]]))#).view(1, -1))
             # Close the file
             img.close()
-
-#print(train_img)
-#print(train_lbl)
-
 print("finished reading images")
 correct = 0
 numImages = 0
-for i, lb in enumerate(train_lbl):
+for i, lb in enumerate(test_lbl):
     # obtain the prediction using the model
-    predict = model(train_img[i])
+    predict = model(test_img[i])
     #print(predict[0])
     #print(predict[0].size())
     # Verify if the prediction s prediction is correct and update the counter
@@ -141,6 +144,9 @@ for i, lb in enumerate(train_lbl):
     #print(torch.argmax(F.softmax(predict[0], dim=0)))
     #print(lb.item())
     #print("finished")
+    test_img_int.append(int(torch.argmax(F.softmax(predict[0], dim=0))))
+    #print(torch.argmax(F.softmax(predict[0], dim=0)))
+    test_lbl_int.append(int(lb.item()))
     numImages += 1
     if lb.item() == torch.argmax(F.softmax(predict[0], dim=0)): 
         correct += 1 # increment the count 
@@ -149,17 +155,17 @@ print("Model correctly predicted " + str(correct) + " images correctly out of " 
 print(numImages)
 print("Test accuracy: " + str(100*correct/numImages) + "%")
 
-'''
-# Create a train & validation split w/ 0.1 sent to validation
-train_img, val_img, train_lbl, val_lbl = train_test_split(train_img, train_lbl, test_size=0.1)
+#Generate our confusion matrix
+confusionMatrix = confusion_matrix(test_img_int, test_lbl_int)
+print(confusionMatrix)
 
-index = 1
+#Now that we have generated our confusion matrix, use Searborn to display it
+ax = sns.heatmap(confusionMatrix, annot=True, cmap='Blues', fmt='g')
 
-for index in range(1,10):
-    test_val1 = F.softmax(model(train_img[index]),1)
-    print(train_lbl[index].item()+1)
-    print(test_val1)
-'''
+ax.set_title('Traffic Sign Prediction Confusion Matrix\n\n')
+ax.set_xlabel('\nPredicted Values')
+ax.set_ylabel('Actual Values')
 
-
+## Display the visualization of the Confusion Matrix.
+plt.show()
 
