@@ -72,7 +72,7 @@ train_img = []
 train_lbl = []
 
 # Path containing the training images
-path = 'data\GTSRB\Final_Training\Images'
+path = 'data\GTSRB\Test'
 # Obtain the set of directories
 set_dir = os.scandir(path)
 
@@ -86,6 +86,7 @@ for dir in set_dir:
 
     dir_path = path + '\\' + dir_name
 
+    print(dir_path)
     # Obtain all the images in the directory
     files = os.scandir(dir_path)
 
@@ -95,15 +96,16 @@ for dir in set_dir:
         # if it is a jpg file, then proceed
         if file.name.endswith(".jpg"):
             img = Image.open(dir_path + "\\" + file.name) 
+            #print(dir_path + "\\" + file.name)
             #obtain the size of the image
             width, height = img.size
-
-            # Convert the image to grayscale
-            img = ImageOps.grayscale(img)
             #img.show()
-
-            img = fn.resize(img, size=28)
-            img = fn.center_crop(img, output_size=[28])
+            # Convert the image to grayscale
+            #img = ImageOps.grayscale(img)
+            #img.show()
+    
+            img = fn.resize(img, size=50)
+            img = fn.center_crop(img, output_size=[50])
 
             # Configure the conversion to tensor
             transform = torchvision.transforms.Compose([
@@ -123,19 +125,41 @@ for dir in set_dir:
             # Close the file
             img.close()
 
+#print(train_img)
+#print(train_lbl)
 
+print("finished reading images")
+correct = 0
+numImages = 0
+for i, lb in enumerate(train_lbl):
+    # obtain the prediction using the model
+    predict = model(train_img[i])
+    #print(predict[0])
+    #print(predict[0].size())
+    # Verify if the prediction s prediction is correct and update the counter
+    #print(F.softmax(predict[0], dim=0))
+    #print(torch.argmax(F.softmax(predict[0], dim=0)))
+    #print(lb.item())
+    #print("finished")
+    numImages += 1
+    if lb.item() == torch.argmax(F.softmax(predict[0], dim=0)): 
+        correct += 1 # increment the count 
 
+print("Model correctly predicted " + str(correct) + " images correctly out of " + str(numImages))
+print(numImages)
+print("Test accuracy: " + str(100*correct/numImages) + "%")
 
+'''
 # Create a train & validation split w/ 0.1 sent to validation
 train_img, val_img, train_lbl, val_lbl = train_test_split(train_img, train_lbl, test_size=0.1)
 
-index = 1 
+index = 1
 
 for index in range(1,10):
     test_val1 = F.softmax(model(train_img[index]),1)
     print(train_lbl[index].item()+1)
     print(test_val1)
-
+'''
 
 
 
