@@ -246,24 +246,6 @@ print("Total time: "  + str(round(end-start,2)) + " s")
 # Save the model to a file
 torch.save(model,'trafficRecognitionModel.pt')
 
-
-
-# # Visually Test a set amount of training images
-# data_set = ImageDataset(train_img, train_lbl)         
-# data_loader = DataLoader(dataset=data_set,batch_size=100, shuffle=True)
-# for i, data in enumerate(data_loader): 
-#     img, lbl = data
-#     lbl = torch.reshape(lbl, [len(lbl)])
-#     predict = model(img)
-#     print("Label:" + str(lbl[i]))
-#     print("Predicted Label" + str(torch.argmax(F.softmax(predict[i],0))))
-
-#     if i == 10: 
-#         break
-
-
-
-
 ## ------------- Test the dataset -------------- ##
 correct = 0
 # Create a dataloader for the testing dataset
