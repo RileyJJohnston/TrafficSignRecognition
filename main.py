@@ -133,7 +133,7 @@ class NN(Module):
             Conv2d(3, 4, kernel_size=3, stride=1, padding=1), #takes as args: in_channels, out_channels ....   -- if greyscale, in_channels is 1.  If RGB it is 3.  The out_channels equals the number of in_channels to the next Conv2D layer
             MaxPool2d(kernel_size=2, stride=2),
             # LeakyReLU(1,inplace=True),
-
+            
             Conv2d(4, 4, kernel_size=3, stride=1, padding=1),
             Conv2d(4, 4, kernel_size=3, stride=1, padding=1),
             MaxPool2d(kernel_size=2, stride=2),
@@ -220,8 +220,8 @@ print(summ)
 
 
 # define the optimizer
-optimizer = Adam(model.parameters(), lr=0.03)
-# optimizer = SGD(model.parameters(), lr=0.1, momentum=0.9) # Fix this later
+# optimizer = Adam(model.parameters(), lr=0.03)
+optimizer = SGD(model.parameters(), lr=0.03, momentum=0.9) # Fix this later
 # define the loss function
 criterion = CrossEntropyLoss()
 
