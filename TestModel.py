@@ -1,6 +1,5 @@
 # Used to handle the images obtained from the dataset.
-import nntplib
-from PIL import Image, ImageStat, ImageOps
+from PIL import Image
 
 # Directory functions
 import os
@@ -9,25 +8,17 @@ import numpy as np
 import torch
 
 # import the building blocks for the neural nets
-from torch.nn import Linear, ReLU, CrossEntropyLoss, MSELoss, Sequential, Conv2d, MaxPool2d, Module, Softmax, BatchNorm2d
-# import the optimizer function
-from torch.optim import SGD
+from torch.nn import Linear, Sequential, Conv2d, MaxPool2d, Module
 
 from sklearn.metrics import confusion_matrix
 # used for image processing
 import torchvision.transforms
-# import optimizer and loss function
-from torch.optim import Adam, SGD
-# import wrapper for tensors
-from torch.autograd import Variable
 # Softmax function
 import torch.nn.functional as F
 # import time to measure time taken by aspects of the program
-import time
-
-from skimage.io import imread
 import torchvision.transforms.functional as fn
 
+# import seaborn and matplotlib libraries for displaying the confusion matrix
 import seaborn as sns
 import matplotlib.pyplot as plt
 
@@ -38,20 +29,14 @@ class NN(Module):
         self.cnn_layers = Sequential(
             # Defining a 2D convolution layer
             Conv2d(1, 4, kernel_size=3, stride=1, padding=1), #takes as args: in_channels, out_channels ....   -- if greyscale, in_channels is 1.  If RGB it is 3.  The out_channels equals the number of in_channels to the next Conv2D layer
-            #BatchNorm2d(4),
-            # ReLU(inplace=True),
             MaxPool2d(kernel_size=2, stride=2),
             # Defining another 2D convolution layer
             Conv2d(4, 4, kernel_size=3, stride=1, padding=1),
-            #BatchNorm2d(4),
-            # ReLU(inplace=True),
             MaxPool2d(kernel_size=2, stride=2),
         )
 
         self.linear_layers = Sequential(
             Linear(4*7*7, 42),  # flatten the output of the layers so that the second argument to the Linear function is the number of classes
-            # ReLU(inplace=True),
-            # Softmax(dim=1)
         )
 
     # Forward pass
@@ -64,11 +49,6 @@ class NN(Module):
 
 model = torch.load('trafficRecognitionModel.pt')
 model.eval()
-
-
-
-
-
 
 # ------ Retrieve all the testing Images -------#
 test_img = []
@@ -84,9 +64,7 @@ set_dir = os.scandir(path)
 # For each image directory
 for dir in set_dir:
     if (str(dir) == '<DirEntry \'00042\'>'):
-        continue # dont use this folder for now
-    #if (str(dir) == '<DirEntry \'00004\'>'):
-    #    break # dont use this folder for now
+        continue
 
     #obtain the name of the directory
     dir_name = dir.name
@@ -97,20 +75,15 @@ for dir in set_dir:
     # Obtain all the images in the directory
     files = os.scandir(dir_path)
 
-
     # for each img
     for file in files:
         # if it is a jpg file, then proceed
         if file.name.endswith(".jpg"):
             img = Image.open(dir_path + "\\" + file.name) 
-            #print(dir_path + "\\" + file.name)
+
             #obtain the size of the image
             width, height = img.size
-            #img.show()
-            # Convert the image to grayscale
-            #img = ImageOps.grayscale(img)
-            #img.show()
-    
+
             img = fn.resize(img, size=50)
             img = fn.center_crop(img, output_size=[50])
 
@@ -123,29 +96,20 @@ for dir in set_dir:
             # apply the transform
             tensor_img = transform(img)
 
-            #tensor_img = tensor_img.view(1, -1)
             # Add the new tensor to the list
             test_img.append(tensor_img)
-            # label is stored in directory index   
 
+            # label is stored in directory index   
             test_lbl.append(torch.tensor([[int(str(dir_name))]]))#).view(1, -1))
+
             # Close the file
             img.close()
-print("finished reading images")
 correct = 0
 numImages = 0
 for i, lb in enumerate(test_lbl):
     # obtain the prediction using the model
     predict = model(test_img[i])
-    #print(predict[0])
-    #print(predict[0].size())
-    # Verify if the prediction s prediction is correct and update the counter
-    #print(F.softmax(predict[0], dim=0))
-    #print(torch.argmax(F.softmax(predict[0], dim=0)))
-    #print(lb.item())
-    #print("finished")
     test_img_int.append(int(torch.argmax(F.softmax(predict[0], dim=0))))
-    #print(torch.argmax(F.softmax(predict[0], dim=0)))
     test_lbl_int.append(int(lb.item()))
     numImages += 1
     if lb.item() == torch.argmax(F.softmax(predict[0], dim=0)): 
