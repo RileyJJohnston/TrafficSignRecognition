@@ -132,4 +132,3 @@ ax.set_ylabel('Actual Values')
 
 ## Display the visualization of the Confusion Matrix.
 plt.show()
-
