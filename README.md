@@ -1,8 +1,8 @@
 # Traffic Sign Classification
 ## SYSC 5108 Group 3
 ## This repository contains:
-###     - main.py
-### Run this program to train the model
+### main.py
+#### Run this program to train the model
 ### TestModel.py
 ### Run this script to evaluate the performance of the model
 ### AnalyzeGUI.py
