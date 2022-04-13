@@ -17,3 +17,23 @@
 ##### - Directory containing training dataset
 ### \data\GTSRB\Test
 ##### - Directory containing testing dataset
+
+
+## Dependencies
+##### The main machine learning library employed for the implementation of the software was PyTorch. This library was chosen due to its prevalence in machine learning applications and its popularity in research area. Relevant documentation can be found at: 
+https://pytorch.org/docs/stable/index.html
+
+##### To implement the functions in PyTorch, image handling methods had to be employed to first convert the images to a compatible format. For this task, the Python Imaging Library (PIL) was employed. Relevant documentation for this library can be found at: 
+https://pillow.readthedocs.io/en/stable/
+
+##### The sklearn library was used to generate the training and validation dataset of tensors by splitting the input dataset in a 90/10 ratio of training images to validation images.  Relevant documentation for this library can be found at:
+https://scikit-learn.org/stable/user_guide.html
+
+##### The tkinter package was employed to obtain the GUI used during testing and shown in section 5.0 Testing and Numerical Results. In this manner, a working example of the network identifying the labels for each input image could be examined. The relevant documentation for this library can be found at: 
+https://docs.python.org/3/library/tkinter.html
+
+##### The Seaborn library was used to generate the visualized confusion matrix during the testing process. The relevant documentation for this library can be found at: 
+https://seaborn.pydata.org/api.html
+
+##### Matplotlib is a visualization library employed in conjunction with Seaborn to generate and display the confusion matrix. The relevant documentation for this library can be found at:
+https://matplotlib.org/stable/index.html
