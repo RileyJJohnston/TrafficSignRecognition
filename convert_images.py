@@ -29,14 +29,5 @@ for dir in set_dir:
             name = img.name.replace(".ppm", ".jpg")
             # Save the new jpg file
             im.save(dir_path + '\\' + name)           
-            
-    
-
-
-
 
 set_dir.close()
-
-
-
-
